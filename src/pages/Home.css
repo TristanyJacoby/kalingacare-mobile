@@ -1,0 +1,63 @@
+.home-content {
+  --background: #ffffff;
+}
+
+.home-banner {
+  margin: 0 20px 24px;
+  padding: 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #7dd3fc 0%, #a5f3fc 45%, #f8b4d9 100%);
+  font-family: 'Poppins', sans-serif;
+}
+
+.home-banner-title {
+  font-weight: 700;
+  font-size: 17px;
+  color: #12283a;
+  margin: 0 0 8px;
+  line-height: 1.3;
+}
+
+.home-banner-subtitle {
+  font-size: 11.5px;
+  color: #12283a;
+  opacity: 0.75;
+  line-height: 1.5;
+  margin: 0 0 16px;
+  max-width: 210px;
+}
+
+.home-banner-btn {
+  background: #fff;
+  border: none;
+  border-radius: 999px;
+  height: 38px;
+  padding: 0 20px;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #12283a;
+  font-family: 'Poppins', sans-serif;
+}
+
+.home-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  margin-bottom: 16px;
+}
+
+.home-section-title-inline {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1e293b;
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+.home-view-all {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3fa8e0;
+  cursor: pointer;
+}

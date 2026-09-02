@@ -1,0 +1,182 @@
+.shop-content {
+  --background: #ffffff;
+}
+
+.shop-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px 12px;
+  font-family: "Poppins", sans-serif;
+}
+
+.shop-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.shop-appname {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1e293b;
+}
+
+.shop-header-icons {
+  margin-left: auto;
+  display: flex;
+  gap: 16px;
+}
+
+.shop-icon-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 20px;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.shop-cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: #3fa8e0;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 999px;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
+
+.shop-search-wrap {
+  display: flex;
+  align-items: center;
+  background: #fafeff;
+  border: 1px solid #dce8f0;
+  border-radius: 12px;
+  height: 48px;
+  margin: 0 20px 20px;
+  padding: 0 14px;
+}
+
+.shop-search-icon {
+  font-size: 16px;
+  color: #94a3b8;
+  margin-right: 10px;
+}
+
+.shop-search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13.5px;
+  color: #1e293b;
+  width: 100%;
+  font-family: "Poppins", sans-serif;
+}
+
+.shop-categories {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 0 20px 20px;
+  scrollbar-width: none;
+}
+
+.shop-categories::-webkit-scrollbar {
+  display: none;
+}
+
+.shop-category-pill {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 999px;
+  padding: 9px 17px;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: "Poppins", sans-serif;
+  background: #beebff;
+  color: #3fa8e0;
+  white-space: nowrap;
+}
+
+.shop-category-pill.active {
+  background: #67c8f7;
+  color: #ffffff;
+}
+
+.shop-section-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1e293b;
+  margin: 0 0 16px;
+  padding: 0 20px;
+  font-family: "Poppins", sans-serif;
+}
+
+.shop-loading,
+.shop-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+  font-family: "Poppins", sans-serif;
+  font-size: 13px;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+  padding: 0 20px 32px;
+}
+
+.shop-card {
+  background: #ffffff;
+  border: 1px solid #dce8f0;
+  border-radius: 16px;
+  padding: 11px;
+  font-family: "Poppins", sans-serif;
+  cursor: pointer;
+}
+
+.shop-card-image-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f1f5f9;
+  margin-bottom: 12px;
+}
+
+.shop-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.shop-card-name {
+  font-weight: 600;
+  font-size: 12.5px;
+  color: #1e293b;
+  margin: 0 0 6px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.shop-card-price {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #3fa8e0;
+  margin: 0;
+}

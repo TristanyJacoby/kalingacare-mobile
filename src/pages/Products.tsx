@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { IonContent, IonPage, IonIcon, IonSpinner } from "@ionic/react";
 import {
   searchOutline,
@@ -11,7 +11,6 @@ import { db } from "../firebase";
 import { useCart } from "../context/CartContext";
 import logo from "../assets/kalingacare-logo.png";
 import "./Shop.css";
-import "./Home.css";
 
 interface Product {
   id: string;
@@ -37,20 +36,19 @@ function placeholderImg() {
   );
 }
 
-// No "featured"/"popular" flag exists in Firestore yet, so this just takes
-// the first few products from the live catalog rather than a real
-// popularity ranking. Swap this out if an admin-settable "featured" field
-// gets added later.
-const FEATURED_COUNT = 4;
-
-const Home: React.FC = () => {
+const Products: React.FC = () => {
   const navigate = useNavigate();
   const { totalItems } = useCart();
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState(searchParams.get("q") ?? "");
+  const [activeCategory, setActiveCategory] = useState<string>(
+    searchParams.get("category") ?? "All",
+  );
 
   useEffect(() => {
+    // Live subscription — same idea as the web app's products.js onSnapshot.
     const q = query(collection(db, "products"), orderBy("name"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const list: Product[] = snapshot.docs.map((doc) => ({
@@ -63,26 +61,40 @@ const Home: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  const featuredProducts = useMemo(
-    () => products.slice(0, FEATURED_COUNT),
-    [products],
-  );
+  // Reflects new ?q= / ?category= params if Home links here again while
+  // this tab is already mounted (e.g. tapping a different category pill).
+  useEffect(() => {
+    const q = searchParams.get("q");
+    const category = searchParams.get("category");
+    if (q !== null) setSearchText(q);
+    if (category !== null) setActiveCategory(category);
+  }, [searchParams]);
 
   const categories = useMemo(() => {
-    return Array.from(new Set(products.map((p) => p.category).filter(Boolean)));
+    const unique = Array.from(
+      new Set(products.map((p) => p.category).filter(Boolean)),
+    );
+    return ["All", ...unique];
   }, [products]);
 
-  const goToProducts = (params?: { q?: string; category?: string }) => {
-    const search = new URLSearchParams();
-    if (params?.q) search.set("q", params.q);
-    if (params?.category) search.set("category", params.category);
-    const qs = search.toString();
-    navigate(qs ? `/products?${qs}` : "/products");
-  };
+  const visibleProducts = products.filter((p) => {
+    const matchesSearch = p.name
+      .toLowerCase()
+      .includes(searchText.toLowerCase());
+    const matchesCategory =
+      activeCategory === "All" || p.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const sectionTitle = searchText
+    ? "Search Results"
+    : activeCategory !== "All"
+      ? activeCategory
+      : "All Products";
 
   return (
     <IonPage>
-      <IonContent fullscreen className="home-content">
+      <IonContent fullscreen className="shop-content">
         <div className="shop-header">
           <img src={logo} alt="KalingaCare" className="shop-logo" />
           <span className="shop-appname">KalingaCare</span>
@@ -103,9 +115,6 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* Typing here is a shortcut, not an in-place filter — Home only
-            shows a handful of featured items, so search hands off to the
-            full catalog on the Categories tab. */}
         <div className="shop-search-wrap">
           <IonIcon icon={searchOutline} className="shop-search-icon" />
           <input
@@ -114,46 +123,24 @@ const Home: React.FC = () => {
             className="shop-search-input"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") goToProducts({ q: searchText });
-            }}
           />
         </div>
 
-        <div className="home-banner">
-          <h2 className="home-banner-title">Care Beyond Borders</h2>
-          <p className="home-banner-subtitle">
-            Wellness essentials for the family you love, delivered anywhere in
-            the Philippines.
-          </p>
-          <button className="home-banner-btn" onClick={() => goToProducts()}>
-            Shop Now
-          </button>
-        </div>
-
-        {categories.length > 0 && (
-          <>
-            <h3 className="shop-section-title">Categories</h3>
-            <div className="shop-categories">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  className="shop-category-pill"
-                  onClick={() => goToProducts({ category: cat })}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </>
+        {categories.length > 1 && (
+          <div className="shop-categories">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                className={`shop-category-pill ${activeCategory === cat ? "active" : ""}`}
+                onClick={() => setActiveCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         )}
 
-        <div className="home-section-header">
-          <h3 className="home-section-title-inline">Featured Products</h3>
-          <span className="home-view-all" onClick={() => goToProducts()}>
-            View All
-          </span>
-        </div>
+        <h3 className="shop-section-title">{sectionTitle}</h3>
 
         {loading && (
           <div className="shop-loading">
@@ -161,12 +148,12 @@ const Home: React.FC = () => {
           </div>
         )}
 
-        {!loading && featuredProducts.length === 0 && (
-          <div className="shop-empty">No products yet.</div>
+        {!loading && visibleProducts.length === 0 && (
+          <div className="shop-empty">No products found.</div>
         )}
 
         <div className="shop-grid">
-          {featuredProducts.map((product) => (
+          {visibleProducts.map((product) => (
             <div
               className="shop-card"
               key={product.id}
@@ -192,4 +179,4 @@ const Home: React.FC = () => {
   );
 };
 
-export default Home;
+export default Products;
