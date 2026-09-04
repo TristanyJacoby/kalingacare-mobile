@@ -1,14 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IonContent, IonPage, IonIcon, IonSpinner } from "@ionic/react";
-import {
-  searchOutline,
-  notificationsOutline,
-  cartOutline,
-} from "ionicons/icons";
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
-import { db } from "../firebase";
-import { useCart } from "../context/CartContext";
+import { searchOutline, notificationsOutline } from "ionicons/icons";
+import { collection, query, orderBy, onSnapshot, doc, getDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "../firebase";
+import { initials } from "../utils/avatar";
+import { getCategoryColor } from "../utils/categoryColor";
 import logo from "../assets/kalingacare-logo.png";
 import "./Shop.css";
 import "./Home.css";
@@ -45,10 +43,12 @@ const FEATURED_COUNT = 4;
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { totalItems } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
+
+  const [userName, setUserName] = useState("");
+  const [userPhoto, setUserPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     const q = query(collection(db, "products"), orderBy("name"));
@@ -63,10 +63,18 @@ const Home: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  const featuredProducts = useMemo(
-    () => products.slice(0, FEATURED_COUNT),
-    [products],
-  );
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+      const snap = await getDoc(doc(db, "users", user.uid));
+      const data = snap.exists() ? (snap.data() as any) : {};
+      setUserName(user.displayName || data.fullName || "");
+      setUserPhoto(data.photoBase64 || null);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const featuredProducts = useMemo(() => products.slice(0, FEATURED_COUNT), [products]);
 
   const categories = useMemo(() => {
     return Array.from(new Set(products.map((p) => p.category).filter(Boolean)));
@@ -87,21 +95,25 @@ const Home: React.FC = () => {
           <img src={logo} alt="KalingaCare" className="shop-logo" />
           <span className="shop-appname">KalingaCare</span>
           <div className="shop-header-icons">
-            <button className="shop-icon-btn" aria-label="Notifications">
+            <button className="shop-icon-btn" aria-label="Notifications" onClick={() => navigate("/notifications")}>
               <IonIcon icon={notificationsOutline} />
             </button>
-            <button
-              className="shop-icon-btn"
-              aria-label="Cart"
-              onClick={() => navigate("/cart")}
-            >
-              <IonIcon icon={cartOutline} />
-              {totalItems > 0 && (
-                <span className="shop-cart-badge">{totalItems}</span>
+            <button className="shop-avatar-btn" aria-label="Profile" onClick={() => navigate("/profile")}>
+              {userPhoto ? (
+                <img src={userPhoto} alt={userName} className="shop-avatar-img" />
+              ) : (
+                <span className="shop-avatar-initials">{initials(userName)}</span>
               )}
             </button>
           </div>
         </div>
+
+        {userName && (
+          <div className="home-greeting">
+            <p className="home-greeting-subtitle">Welcome back,</p>
+            <p className="home-greeting-name">{userName}</p>
+          </div>
+        )}
 
         {/* Typing here is a shortcut, not an in-place filter — Home only
             shows a handful of featured items, so search hands off to the
@@ -123,8 +135,7 @@ const Home: React.FC = () => {
         <div className="home-banner">
           <h2 className="home-banner-title">Care Beyond Borders</h2>
           <p className="home-banner-subtitle">
-            Wellness essentials for the family you love, delivered anywhere in
-            the Philippines.
+            Wellness essentials for the family you love, delivered anywhere in the Philippines.
           </p>
           <button className="home-banner-btn" onClick={() => goToProducts()}>
             Shop Now
@@ -167,12 +178,11 @@ const Home: React.FC = () => {
 
         <div className="shop-grid">
           {featuredProducts.map((product) => (
-            <div
-              className="shop-card"
-              key={product.id}
-              onClick={() => navigate(`/product/${product.id}`)}
-            >
-              <div className="shop-card-image-wrap">
+            <div className="shop-card" key={product.id} onClick={() => navigate(`/product/${product.id}`)}>
+              <div
+                className="shop-card-image-wrap"
+                style={{ background: getCategoryColor(product.category) }}
+              >
                 <img
                   src={product.imgBase64 || product.img || placeholderImg()}
                   alt={product.name}

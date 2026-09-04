@@ -1,14 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { IonContent, IonPage, IonIcon, IonSpinner } from "@ionic/react";
-import {
-  searchOutline,
-  notificationsOutline,
-  cartOutline,
-} from "ionicons/icons";
+import { searchOutline, notificationsOutline, cartOutline } from "ionicons/icons";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { useCart } from "../context/CartContext";
+import { getCategoryColor } from "../utils/categoryColor";
 import logo from "../assets/kalingacare-logo.png";
 import "./Shop.css";
 
@@ -43,9 +40,7 @@ const Products: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState(searchParams.get("q") ?? "");
-  const [activeCategory, setActiveCategory] = useState<string>(
-    searchParams.get("category") ?? "All",
-  );
+  const [activeCategory, setActiveCategory] = useState<string>(searchParams.get("category") ?? "All");
 
   useEffect(() => {
     // Live subscription — same idea as the web app's products.js onSnapshot.
@@ -71,26 +66,21 @@ const Products: React.FC = () => {
   }, [searchParams]);
 
   const categories = useMemo(() => {
-    const unique = Array.from(
-      new Set(products.map((p) => p.category).filter(Boolean)),
-    );
+    const unique = Array.from(new Set(products.map((p) => p.category).filter(Boolean)));
     return ["All", ...unique];
   }, [products]);
 
   const visibleProducts = products.filter((p) => {
-    const matchesSearch = p.name
-      .toLowerCase()
-      .includes(searchText.toLowerCase());
-    const matchesCategory =
-      activeCategory === "All" || p.category === activeCategory;
+    const matchesSearch = p.name.toLowerCase().includes(searchText.toLowerCase());
+    const matchesCategory = activeCategory === "All" || p.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
 
   const sectionTitle = searchText
     ? "Search Results"
     : activeCategory !== "All"
-      ? activeCategory
-      : "All Products";
+    ? activeCategory
+    : "All Products";
 
   return (
     <IonPage>
@@ -99,18 +89,12 @@ const Products: React.FC = () => {
           <img src={logo} alt="KalingaCare" className="shop-logo" />
           <span className="shop-appname">KalingaCare</span>
           <div className="shop-header-icons">
-            <button className="shop-icon-btn" aria-label="Notifications">
+            <button className="shop-icon-btn" aria-label="Notifications" onClick={() => navigate("/notifications")}>
               <IonIcon icon={notificationsOutline} />
             </button>
-            <button
-              className="shop-icon-btn"
-              aria-label="Cart"
-              onClick={() => navigate("/cart")}
-            >
+            <button className="shop-icon-btn" aria-label="Cart" onClick={() => navigate("/cart")}>
               <IonIcon icon={cartOutline} />
-              {totalItems > 0 && (
-                <span className="shop-cart-badge">{totalItems}</span>
-              )}
+              {totalItems > 0 && <span className="shop-cart-badge">{totalItems}</span>}
             </button>
           </div>
         </div>
@@ -154,12 +138,11 @@ const Products: React.FC = () => {
 
         <div className="shop-grid">
           {visibleProducts.map((product) => (
-            <div
-              className="shop-card"
-              key={product.id}
-              onClick={() => navigate(`/product/${product.id}`)}
-            >
-              <div className="shop-card-image-wrap">
+            <div className="shop-card" key={product.id} onClick={() => navigate(`/product/${product.id}`)}>
+              <div
+                className="shop-card-image-wrap"
+                style={{ background: getCategoryColor(product.category) }}
+              >
                 <img
                   src={product.imgBase64 || product.img || placeholderImg()}
                   alt={product.name}

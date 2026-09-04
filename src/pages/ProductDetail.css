@@ -51,7 +51,6 @@
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
-  background: #ffffff;
   border-radius: 0 0 28px 28px;
 }
 
@@ -169,11 +168,10 @@
 }
 
 .pd-footer {
-  --background: #ffffff;
-  --border-width: 1px 0 0 0;
-  --border-color: #dce8f0;
-  --padding-top: 14px;
-  --padding-bottom: 14px;
+  --background: transparent;
+  --border-width: 0;
+  --padding-top: 10px;
+  --padding-bottom: 4px;
   --padding-start: 20px;
   --padding-end: 20px;
 }
@@ -188,6 +186,7 @@
   font-weight: 600;
   font-size: 14.5px;
   font-family: "Poppins", sans-serif;
+  box-shadow: 0 8px 20px rgba(103, 200, 247, 0.4);
 }
 
 .pd-rating-summary {
@@ -300,7 +299,6 @@
   aspect-ratio: 1 / 1;
   border-radius: 12px;
   overflow: hidden;
-  background: #f1f5f9;
   margin-bottom: 8px;
 }
 

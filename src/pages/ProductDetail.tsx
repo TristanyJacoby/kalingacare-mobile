@@ -3,8 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { IonPage, IonContent, IonFooter, IonToolbar, IonIcon, IonSpinner, useIonToast } from '@ionic/react';
 import { arrowBackOutline, cartOutline, star, starOutline, starHalf } from 'ionicons/icons';
 import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { db } from '../firebase';
 import { useCart } from '../context/CartContext';
+import { canAddToCart } from '../utils/cartGuard';
+import { getCategoryColor } from '../utils/categoryColor';
 import './ProductDetail.css';
 
 interface Product {
@@ -36,6 +38,7 @@ interface RelatedProduct {
   id: string;
   name: string;
   price: number;
+  category: string;
   img?: string;
   imgBase64?: string;
 }
@@ -184,20 +187,15 @@ const ProductDetail: React.FC = () => {
 
     // Mirrors js/checkout.js and the web app's cart-blocking rule — internal
     // accounts (staff/admin/superadmin) don't place real customer orders, so
-    // they shouldn't be able to add to cart either. Checked here rather than
-    // trusting a UI-only restriction, since role can change between sessions.
-    const user = auth.currentUser;
-    if (user) {
-      const snap = await getDoc(doc(db, 'users', user.uid));
-      const role = snap.exists() ? snap.data().role || 'user' : 'user';
-      if (['staff', 'admin', 'superadmin'].includes(role)) {
-        presentToast({
-          message: "Staff and admin accounts can't add items to cart.",
-          duration: 2500,
-          color: 'warning',
-        });
-        return;
-      }
+    // they shouldn't be able to add to cart either.
+    const allowed = await canAddToCart();
+    if (!allowed) {
+      presentToast({
+        message: "Staff and admin accounts can't add items to cart.",
+        duration: 2500,
+        color: 'warning',
+      });
+      return;
     }
 
     // Quantity is edited in Cart now, not here — always add 1 unit.
@@ -242,7 +240,12 @@ const ProductDetail: React.FC = () => {
         </div>
 
         <div className="pd-gallery-wrap">
-          <div className="pd-gallery" ref={galleryRef} onScroll={handleManualScroll}>
+          <div
+            className="pd-gallery"
+            ref={galleryRef}
+            onScroll={handleManualScroll}
+            style={{ background: getCategoryColor(product.category) }}
+          >
             {galleryImages.map((src, i) => (
               <div className="pd-gallery-slide" key={i}>
                 <img
@@ -321,7 +324,10 @@ const ProductDetail: React.FC = () => {
                   key={item.id}
                   onClick={() => navigate(`/product/${item.id}`)}
                 >
-                  <div className="pd-related-image-wrap">
+                  <div
+                    className="pd-related-image-wrap"
+                    style={{ background: getCategoryColor(item.category) }}
+                  >
                     <img
                       src={item.imgBase64 || item.img || placeholderImg()}
                       alt={item.name}

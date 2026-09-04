@@ -163,15 +163,14 @@
   left: 20px;
 }
 
-.profile-logout {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: none;
-  border: none;
-  padding: 20px;
-  font-weight: 500;
-  font-size: 13.5px;
+.profile-menu-row-danger {
+  border-bottom: none;
+}
+
+.profile-menu-icon-danger {
   color: #d64545;
-  font-family: "Poppins", sans-serif;
+}
+
+.profile-menu-label-danger {
+  color: #d64545;
 }

@@ -79,7 +79,7 @@ const Profile: React.FC = () => {
       <IonContent fullscreen className="profile-content">
         <div className="profile-header">
           <span className="profile-title">Profile</span>
-          <button className="profile-icon-btn" aria-label="Notifications">
+          <button className="profile-icon-btn" aria-label="Notifications" onClick={() => navigate('/notifications')}>
             <IonIcon icon={notificationsOutline} />
           </button>
         </div>
@@ -141,12 +141,12 @@ const Profile: React.FC = () => {
             <span className="profile-menu-label">Help &amp; Support</span>
             <IonIcon icon={chevronForwardOutline} className="profile-menu-chevron" />
           </button>
-        </div>
 
-        <button className="profile-logout" onClick={handleLogout}>
-          <IonIcon icon={logOutOutline} />
-          <span>Log Out</span>
-        </button>
+          <button className="profile-menu-row profile-menu-row-danger" onClick={handleLogout}>
+            <IonIcon icon={logOutOutline} className="profile-menu-icon profile-menu-icon-danger" />
+            <span className="profile-menu-label profile-menu-label-danger">Log Out</span>
+          </button>
+        </div>
       </IonContent>
     </IonPage>
   );

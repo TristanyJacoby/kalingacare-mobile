@@ -2,13 +2,33 @@
   --background: #f2f9ff;
 }
 
+.home-greeting {
+  padding: 4px 20px 18px;
+  font-family: "Poppins", sans-serif;
+}
+
+.home-greeting-subtitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  margin: 0 0 2px;
+}
+
+.home-greeting-name {
+  font-size: 21px;
+  font-weight: 700;
+  color: #12283a;
+  margin: 0;
+  line-height: 1.25;
+}
+
 .home-banner {
   margin: 0 20px 24px;
   padding: 22px;
   border-radius: 26px;
   background: linear-gradient(135deg, #7dd3fc 0%, #a5f3fc 45%, #f8b4d9 100%);
   box-shadow: 0 10px 24px rgba(103, 200, 247, 0.25);
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
 .home-banner-title {
@@ -37,7 +57,7 @@
   font-weight: 700;
   font-size: 12.5px;
   color: #12283a;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
 .home-section-header {
@@ -53,7 +73,7 @@
   font-size: 14px;
   color: #1e293b;
   margin: 0;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
 .home-view-all {

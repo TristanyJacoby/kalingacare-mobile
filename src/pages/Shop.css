@@ -56,6 +56,32 @@
   padding: 0 3px;
 }
 
+.shop-avatar-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #7dd3fc 0%, #a5f3fc 45%, #f8b4d9 100%);
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.shop-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.shop-avatar-initials {
+  font-weight: 700;
+  font-size: 11px;
+  color: #12283a;
+}
+
 .shop-search-wrap {
   display: flex;
   align-items: center;
@@ -149,11 +175,11 @@
 }
 
 .shop-card-image-wrap {
+  position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  background: #f1f5f9;
   margin-bottom: 12px;
 }
 

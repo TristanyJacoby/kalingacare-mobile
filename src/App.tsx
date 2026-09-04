@@ -12,6 +12,7 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
 import Profile from './pages/Profile';
+import Notifications from './pages/Notifications';
 import MyAccount from './pages/MyAccount';
 import MyOrders from './pages/MyOrders';
 import SavedAddresses from './pages/SavedAddresses';
@@ -67,6 +68,7 @@ const App: React.FC = () => (
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/notifications" element={<Notifications />} />
             <Route path="/account" element={<MyAccount />} />
             <Route path="/orders" element={<MyOrders />} />
             <Route path="/addresses" element={<SavedAddresses />} />

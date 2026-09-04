@@ -1,0 +1,62 @@
+.notif-content {
+  --background: #f2f9ff;
+}
+
+.notif-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f2f9ff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(14px, env(safe-area-inset-top)) 20px 14px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.notif-icon-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  font-size: 20px;
+  color: #1e293b;
+  width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notif-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1e293b;
+}
+
+.notif-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 90px 40px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.notif-empty-icon {
+  font-size: 44px;
+  color: #94a3b8;
+  margin-bottom: 16px;
+}
+
+.notif-empty-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1e293b;
+  margin: 0 0 8px;
+}
+
+.notif-empty-text {
+  font-size: 12.5px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
