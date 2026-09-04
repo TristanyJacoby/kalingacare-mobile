@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { IonPage, IonContent, IonIcon, IonSpinner } from '@ionic/react';
-import { arrowBackOutline, cartOutline } from 'ionicons/icons';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { IonPage, IonContent, IonFooter, IonToolbar, IonIcon, IonSpinner, useIonToast } from '@ionic/react';
+import { arrowBackOutline, cartOutline, star, starOutline, starHalf } from 'ionicons/icons';
+import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import { useCart } from '../context/CartContext';
 import './ProductDetail.css';
 
@@ -15,6 +15,27 @@ interface Product {
   price: number;
   stock?: number;
   description?: string;
+  img?: string;
+  imgBase64?: string;
+  // Not in the current Firestore schema yet — this is forward-compatible:
+  // if a product ever gets a real `images` array (e.g. once the web admin
+  // uploader supports multiple images), the gallery below picks it up
+  // automatically. Until then it just falls back to the single image.
+  images?: string[];
+}
+
+interface Review {
+  id: string;
+  userName: string;
+  rating: number;
+  text: string;
+  createdAt?: { toDate: () => Date };
+}
+
+interface RelatedProduct {
+  id: string;
+  name: string;
+  price: number;
   img?: string;
   imgBase64?: string;
 }
@@ -32,14 +53,32 @@ function placeholderImg() {
   );
 }
 
+function StarRow({ value }: { value: number }) {
+  const stars = [];
+  for (let i = 1; i <= 5; i++) {
+    const icon = value >= i ? star : value >= i - 0.5 ? starHalf : starOutline;
+    stars.push(<IonIcon key={i} icon={icon} className="pd-star" />);
+  }
+  return <div className="pd-star-row">{stars}</div>;
+}
+
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem, totalItems } = useCart();
+  const [presentToast] = useIonToast();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [quantity, setQuantity] = useState(1);
   const [showAdded, setShowAdded] = useState(false);
+
+  const [activeImage, setActiveImage] = useState(0);
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const autoAdvanceRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+
+  const [related, setRelated] = useState<RelatedProduct[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -52,12 +91,117 @@ const ProductDetail: React.FC = () => {
     })();
   }, [id]);
 
-  const handleAddToCart = () => {
+  // Reviews for this product, newest first.
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      setReviewsLoading(true);
+      try {
+        const q = query(collection(db, 'reviews'), where('productId', '==', id), orderBy('createdAt', 'desc'));
+        const snap = await getDocs(q);
+        setReviews(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Review, 'id'>) })));
+      } catch {
+        // If the composite index for this query hasn't been created yet in
+        // Firestore, this fails silently rather than crashing the page —
+        // the reviews section just shows "No reviews yet."
+        setReviews([]);
+      }
+      setReviewsLoading(false);
+    })();
+  }, [id]);
+
+  // Related products — same category, excluding this one.
+  useEffect(() => {
     if (!product) return;
-    addItem(
-      { id: product.id, name: product.name, price: product.price, img: product.imgBase64 || product.img },
-      quantity,
-    );
+    (async () => {
+      try {
+        const q = query(
+          collection(db, 'products'),
+          where('category', '==', product.category),
+          orderBy('name'),
+          limit(7),
+        );
+        const snap = await getDocs(q);
+        const list = snap.docs
+          .map((d) => ({ id: d.id, ...(d.data() as Omit<RelatedProduct, 'id'>) }))
+          .filter((p) => p.id !== product.id)
+          .slice(0, 6);
+        setRelated(list);
+      } catch {
+        // Same defensive fallback as the reviews query — if the composite
+        // index (category + name) hasn't been created in Firestore yet,
+        // this section just doesn't render instead of crashing the page.
+        setRelated([]);
+      }
+    })();
+  }, [product]);
+
+  const galleryImages = useMemo(() => {
+    if (product?.images && product.images.length > 0) return product.images;
+    const single = product?.imgBase64 || product?.img;
+    return single ? [single] : [placeholderImg()];
+  }, [product]);
+
+  const averageRating = useMemo(() => {
+    if (reviews.length === 0) return 0;
+    return reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+  }, [reviews]);
+
+  // Auto-advance the gallery every 5s if there's more than one image.
+  useEffect(() => {
+    if (galleryImages.length <= 1) return;
+    autoAdvanceRef.current = setInterval(() => {
+      setActiveImage((i) => (i + 1) % galleryImages.length);
+    }, 5000);
+    return () => {
+      if (autoAdvanceRef.current) clearInterval(autoAdvanceRef.current);
+    };
+  }, [galleryImages.length]);
+
+  // Keep the scroll position in sync when auto-advance changes the index.
+  useEffect(() => {
+    const el = galleryRef.current;
+    if (!el) return;
+    el.scrollTo({ left: activeImage * el.clientWidth, behavior: 'smooth' });
+  }, [activeImage]);
+
+  const handleManualScroll = () => {
+    const el = galleryRef.current;
+    if (!el) return;
+    const index = Math.round(el.scrollLeft / el.clientWidth);
+    setActiveImage(index);
+    // Restart the auto-advance timer so it doesn't jump right after a swipe.
+    if (autoAdvanceRef.current) clearInterval(autoAdvanceRef.current);
+    if (galleryImages.length > 1) {
+      autoAdvanceRef.current = setInterval(() => {
+        setActiveImage((i) => (i + 1) % galleryImages.length);
+      }, 5000);
+    }
+  };
+
+  const handleAddToCart = async () => {
+    if (!product) return;
+
+    // Mirrors js/checkout.js and the web app's cart-blocking rule — internal
+    // accounts (staff/admin/superadmin) don't place real customer orders, so
+    // they shouldn't be able to add to cart either. Checked here rather than
+    // trusting a UI-only restriction, since role can change between sessions.
+    const user = auth.currentUser;
+    if (user) {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      const role = snap.exists() ? snap.data().role || 'user' : 'user';
+      if (['staff', 'admin', 'superadmin'].includes(role)) {
+        presentToast({
+          message: "Staff and admin accounts can't add items to cart.",
+          duration: 2500,
+          color: 'warning',
+        });
+        return;
+      }
+    }
+
+    // Quantity is edited in Cart now, not here — always add 1 unit.
+    addItem({ id: product.id, name: product.name, price: product.price, img: product.imgBase64 || product.img });
     setShowAdded(true);
     setTimeout(() => setShowAdded(false), 1800);
   };
@@ -97,21 +241,44 @@ const ProductDetail: React.FC = () => {
           </button>
         </div>
 
-        <div className="pd-image-wrap">
-          <img
-            src={product.imgBase64 || product.img || placeholderImg()}
-            alt={product.name}
-            className="pd-image"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = placeholderImg();
-            }}
-          />
+        <div className="pd-gallery-wrap">
+          <div className="pd-gallery" ref={galleryRef} onScroll={handleManualScroll}>
+            {galleryImages.map((src, i) => (
+              <div className="pd-gallery-slide" key={i}>
+                <img
+                  src={src}
+                  alt={`${product.name} photo ${i + 1}`}
+                  className="pd-image"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = placeholderImg();
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+          {galleryImages.length > 1 && (
+            <div className="pd-gallery-dots">
+              {galleryImages.map((_, i) => (
+                <span key={i} className={`pd-gallery-dot ${i === activeImage ? 'active' : ''}`} />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="pd-body">
           <p className="pd-category">{product.category}</p>
           <h1 className="pd-name">{product.name}</h1>
           <p className="pd-price">{peso(product.price)}</p>
+
+          {reviews.length > 0 && (
+            <div className="pd-rating-summary">
+              <StarRow value={averageRating} />
+              <span className="pd-rating-value">{averageRating.toFixed(1)}</span>
+              <span className="pd-rating-count">
+                ({reviews.length} review{reviews.length === 1 ? '' : 's'})
+              </span>
+            </div>
+          )}
 
           {product.description && (
             <>
@@ -120,34 +287,68 @@ const ProductDetail: React.FC = () => {
             </>
           )}
 
-          <h3 className="pd-section-title">Quantity</h3>
-          <div className="pd-qty-wrap">
-            <button
-              className="pd-qty-btn"
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              aria-label="Decrease quantity"
-            >
-              −
-            </button>
-            <span className="pd-qty-value">{quantity}</span>
-            <button
-              className="pd-qty-btn"
-              onClick={() => setQuantity((q) => Math.min(product.stock ?? 99, q + 1))}
-              aria-label="Increase quantity"
-            >
-              +
-            </button>
-          </div>
+          <h3 className="pd-section-title">Reviews &amp; Ratings</h3>
+          {reviewsLoading ? (
+            <div className="pd-reviews-loading">
+              <IonSpinner name="crescent" />
+            </div>
+          ) : reviews.length === 0 ? (
+            <p className="pd-no-reviews">
+              No reviews yet. Reviews can be left from My Orders once an item has been delivered.
+            </p>
+          ) : (
+            <div className="pd-reviews-list">
+              {reviews.map((review) => (
+                <div className="pd-review-card" key={review.id}>
+                  <div className="pd-review-header">
+                    <span className="pd-review-name">{review.userName}</span>
+                    <StarRow value={review.rating} />
+                  </div>
+                  {review.text && <p className="pd-review-text">{review.text}</p>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
+        {related.length > 0 && (
+          <div className="pd-related">
+            <h3 className="pd-section-title pd-related-title">More Products</h3>
+            <div className="pd-related-row">
+              {related.map((item) => (
+                <div
+                  className="pd-related-card"
+                  key={item.id}
+                  onClick={() => navigate(`/product/${item.id}`)}
+                >
+                  <div className="pd-related-image-wrap">
+                    <img
+                      src={item.imgBase64 || item.img || placeholderImg()}
+                      alt={item.name}
+                      className="pd-related-image"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = placeholderImg();
+                      }}
+                    />
+                  </div>
+                  <p className="pd-related-name">{item.name}</p>
+                  <p className="pd-related-price">{peso(item.price)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className={`pd-toast ${showAdded ? 'show' : ''}`}>Added to cart</div>
       </IonContent>
 
-      <div className="pd-footer">
-        <button className="pd-add-btn" onClick={handleAddToCart}>
-          Add to Cart
-        </button>
-      </div>
+      <IonFooter>
+        <IonToolbar className="pd-footer">
+          <button className="pd-add-btn" onClick={handleAddToCart}>
+            Add to Cart
+          </button>
+        </IonToolbar>
+      </IonFooter>
     </IonPage>
   );
 };

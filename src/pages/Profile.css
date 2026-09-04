@@ -1,0 +1,177 @@
+.profile-content {
+  --background: #f2f9ff;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(16px, env(safe-area-inset-top)) 20px 12px;
+  font-family: "Poppins", sans-serif;
+}
+
+.profile-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1e293b;
+}
+
+.profile-icon-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #1e293b;
+  padding: 0;
+}
+
+.profile-card {
+  margin: 0 20px 20px;
+  border-radius: 24px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, #7dd3fc 0%, #a5f3fc 45%, #f8b4d9 100%);
+  box-shadow: 0 10px 24px rgba(103, 200, 247, 0.25);
+  font-family: "Poppins", sans-serif;
+}
+
+.profile-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 26px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-avatar-initials {
+  font-weight: 700;
+  font-size: 15px;
+  color: #3fa8e0;
+}
+
+.profile-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-name {
+  font-weight: 700;
+  font-size: 14.5px;
+  color: #12283a;
+  margin: 0;
+}
+
+.profile-email {
+  font-size: 11.5px;
+  color: #12283a;
+  opacity: 0.8;
+  margin: 0;
+}
+
+.profile-role-badge {
+  align-self: flex-start;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-weight: 700;
+  font-size: 10.5px;
+  margin-top: 2px;
+}
+
+.profile-menu {
+  margin: 0 20px;
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 4px 18px;
+  box-shadow: 0 4px 14px rgba(63, 168, 224, 0.08);
+}
+
+.profile-menu-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 0;
+  border-bottom: 1px solid #f0f6fb;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  font-family: "Poppins", sans-serif;
+  text-align: left;
+}
+
+.profile-menu-icon {
+  font-size: 16px;
+  color: #3fa8e0;
+  flex-shrink: 0;
+}
+
+.profile-menu-label {
+  flex: 1;
+  font-weight: 500;
+  font-size: 13.5px;
+  color: #1e293b;
+}
+
+.profile-menu-chevron {
+  font-size: 16px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.profile-toggle {
+  width: 42px;
+  height: 25px;
+  border-radius: 999px;
+  background: #dce8f0;
+  border: none;
+  position: relative;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background 0.2s ease;
+}
+
+.profile-toggle.on {
+  background: #67c8f7;
+}
+
+.profile-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 19px;
+  height: 19px;
+  border-radius: 9.5px;
+  background: #ffffff;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.22);
+  transition: left 0.2s ease;
+}
+
+.profile-toggle.on .profile-toggle-knob {
+  left: 20px;
+}
+
+.profile-logout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 20px;
+  font-weight: 500;
+  font-size: 13.5px;
+  color: #d64545;
+  font-family: "Poppins", sans-serif;
+}

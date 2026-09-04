@@ -1,12 +1,12 @@
 .auth-content {
-  --background: #ffffff;
+  --background: #f2f9ff;
 }
 
 .auth-container {
-  padding: 20px;
+  padding: max(20px, env(safe-area-inset-top)) 20px 20px;
   max-width: 375px;
   margin: 0 auto;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
 .auth-logo-wrap {
@@ -60,11 +60,11 @@
 .auth-input-wrap {
   display: flex;
   align-items: center;
-  background: #fafeff;
+  background: #ffffff;
   border: 1px solid #dce8f0;
-  border-radius: 12px;
+  border-radius: 24px;
   height: 48px;
-  padding: 0 14px;
+  padding: 0 16px;
   margin-bottom: 20px;
 }
 
@@ -81,7 +81,7 @@
   font-size: 13.5px;
   color: #1e293b;
   width: 100%;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
 .auth-forgot-wrap {
@@ -105,7 +105,7 @@
   border-radius: 999px;
   font-weight: 600;
   font-size: 14.5px;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
 .auth-primary-btn:disabled {
@@ -143,7 +143,7 @@
   font-size: 13.5px;
   font-weight: 500;
   color: #1e293b;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
 .auth-google-btn:disabled {

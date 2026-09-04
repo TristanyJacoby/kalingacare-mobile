@@ -1,0 +1,42 @@
+/* Floating pill-shaped bottom nav bar — Sept 2026 redesign.
+   Deliberately NOT position:absolute — pages with their own IonFooter
+   (Product Detail, Cart, Checkout) need this bar to stay in normal layout
+   flow underneath them, not overlap on top of their action buttons. The
+   "floating" look comes from margin + rounded corners + shadow instead. */
+
+.floating-tab-bar {
+  --background: #ffffff;
+  background: #ffffff;
+  border: none;
+  margin: 0 16px 16px;
+  height: 64px;
+  border-radius: 32px;
+  box-shadow:
+    0 10px 26px rgba(63, 168, 224, 0.22),
+    0 2px 8px rgba(18, 40, 58, 0.08);
+}
+
+.floating-tab-bar ion-tab-button {
+  --background: transparent;
+  --background-focused: transparent;
+  --color: #94a3b8;
+  --color-selected: #94a3b8;
+}
+
+.floating-tab-bar ion-tab-button ion-icon {
+  font-size: 21px;
+  color: #94a3b8;
+  padding: 10px;
+  border-radius: 999px;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.floating-tab-bar ion-tab-button.tab-selected ion-icon {
+  background: #67c8f7;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(103, 200, 247, 0.45);
+}

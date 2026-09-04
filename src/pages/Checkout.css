@@ -1,0 +1,20 @@
+.checkout-form {
+  padding: 0 20px;
+}
+
+.checkout-payment-row {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #dce8f0;
+  border-radius: 21px;
+  height: 42px;
+  padding: 0 16px;
+  margin-bottom: 20px;
+}
+
+.checkout-payment-label {
+  font-size: 13.5px;
+  color: #1e293b;
+  font-family: 'Poppins', sans-serif;
+}

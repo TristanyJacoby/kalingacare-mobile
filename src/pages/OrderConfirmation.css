@@ -1,0 +1,52 @@
+.oc-content {
+  --background: #f2f9ff;
+}
+
+.oc-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: max(16px, env(safe-area-inset-top)) 20px 12px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.oc-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.oc-appname {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1e293b;
+}
+
+.oc-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 100px 40px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.oc-message {
+  font-weight: 700;
+  font-size: 20px;
+  color: #12283a;
+  line-height: 1.3;
+  margin: 0 0 24px;
+}
+
+.oc-home-btn {
+  background: #8fe2fc;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 26px;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #12283a;
+  font-family: 'Poppins', sans-serif;
+}
