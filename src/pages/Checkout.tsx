@@ -26,7 +26,7 @@ function peso(amount: number) {
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const [presentToast] = useIonToast();
-  const { selectedItems, selectedSubtotal, removeItems } = useCart();
+  const { selectedItems, selectedSubtotal, removeItems, appliedPromo, discountAmount, clearPromo } = useCart();
 
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [blocked, setBlocked] = useState(false);
@@ -102,7 +102,9 @@ const Checkout: React.FC = () => {
         })),
         subtotal: selectedSubtotal,
         shippingFee: SHIPPING_FEE,
-        total: selectedSubtotal + SHIPPING_FEE,
+        promoCode: appliedPromo?.code ?? null,
+        discount: discountAmount,
+        total: selectedSubtotal + SHIPPING_FEE - discountAmount,
         status: 'Pending',
         shippingInfo: {
           fullName,
@@ -120,6 +122,7 @@ const Checkout: React.FC = () => {
       // Only remove the items that were actually ordered — anything left
       // unselected in the cart should still be there afterward.
       removeItems(selectedItems.map((item) => item.id));
+      clearPromo();
       navigate('/order-confirmation');
     } catch (err) {
       presentToast({
@@ -273,15 +276,23 @@ const Checkout: React.FC = () => {
             <span>Shipping</span>
             <span className="cart-summary-value">{peso(SHIPPING_FEE)}</span>
           </div>
+          {discountAmount > 0 && (
+            <div className="cart-summary-row cart-summary-discount">
+              <span>Discount {appliedPromo ? `(${appliedPromo.code})` : ''}</span>
+              <span className="cart-summary-value">-{peso(discountAmount)}</span>
+            </div>
+          )}
           <div className="cart-summary-divider" />
           <div className="cart-summary-row cart-summary-total">
             <span>Total</span>
-            <span className="cart-summary-value cart-summary-total-value">{peso(selectedSubtotal + SHIPPING_FEE)}</span>
+            <span className="cart-summary-value cart-summary-total-value">
+              {peso(selectedSubtotal + SHIPPING_FEE - discountAmount)}
+            </span>
           </div>
         </div>
       </IonContent>
 
-      <IonFooter>
+      <IonFooter className="cart-footer-outer">
         <IonToolbar className="cart-footer">
           <button className="cart-checkout-btn" onClick={handlePlaceOrder} disabled={placing}>
             {placing ? 'Placing Order…' : 'Place Order'}

@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { IonContent, IonPage, IonIcon, IonSpinner } from "@ionic/react";
-import { searchOutline, notificationsOutline } from "ionicons/icons";
+import { IonContent, IonPage, IonIcon, IonSpinner, useIonToast } from "@ionic/react";
+import { searchOutline, notificationsOutline, copyOutline } from "ionicons/icons";
 import { collection, query, orderBy, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
@@ -20,6 +20,14 @@ interface Product {
   stock?: number;
   img?: string;
   imgBase64?: string;
+}
+
+interface BannerSlide {
+  key: string;
+  title: string;
+  subtitle: string;
+  cta: { label: string; onClick: () => void };
+  code?: string;
 }
 
 function peso(amount: number) {
@@ -43,12 +51,17 @@ const FEATURED_COUNT = 4;
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const [presentToast] = useIonToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
 
   const [userName, setUserName] = useState("");
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
+
+  const [activeSlide, setActiveSlide] = useState(0);
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const autoAdvanceRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const q = query(collection(db, "products"), orderBy("name"));
@@ -76,16 +89,75 @@ const Home: React.FC = () => {
 
   const featuredProducts = useMemo(() => products.slice(0, FEATURED_COUNT), [products]);
 
-  const categories = useMemo(() => {
-    return Array.from(new Set(products.map((p) => p.category).filter(Boolean)));
-  }, [products]);
-
   const goToProducts = (params?: { q?: string; category?: string }) => {
     const search = new URLSearchParams();
     if (params?.q) search.set("q", params.q);
     if (params?.category) search.set("category", params.category);
     const qs = search.toString();
     navigate(qs ? `/products?${qs}` : "/products");
+  };
+
+  const handleCopyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      presentToast({ message: `Copied "${code}" — paste it in Cart to apply.`, duration: 2200, color: "success" });
+    } catch {
+      presentToast({ message: `Your code: ${code}`, duration: 3000, color: "medium" });
+    }
+  };
+
+  const slides: BannerSlide[] = useMemo(
+    () => [
+      {
+        key: "brand",
+        title: "Care Beyond Borders",
+        subtitle: "Wellness essentials for the family you love, delivered anywhere in the Philippines.",
+        cta: { label: "Shop Now", onClick: () => goToProducts() },
+      },
+      {
+        key: "welcome10",
+        title: "10% Off Your First Order",
+        subtitle: "New here? Use this code at checkout — real discount, applied at Cart.",
+        cta: { label: "Copy Code", onClick: () => handleCopyCode("WELCOME10") },
+        code: "WELCOME10",
+      },
+      {
+        key: "care50",
+        title: "₱50 Off Your Order",
+        subtitle: "Use this code anytime at checkout — no minimum spend.",
+        cta: { label: "Copy Code", onClick: () => handleCopyCode("CARE50") },
+        code: "CARE50",
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  // Auto-advance the banner carousel every 5s.
+  useEffect(() => {
+    autoAdvanceRef.current = setInterval(() => {
+      setActiveSlide((i) => (i + 1) % slides.length);
+    }, 5000);
+    return () => {
+      if (autoAdvanceRef.current) clearInterval(autoAdvanceRef.current);
+    };
+  }, [slides.length]);
+
+  useEffect(() => {
+    const el = bannerRef.current;
+    if (!el) return;
+    el.scrollTo({ left: activeSlide * el.clientWidth, behavior: "smooth" });
+  }, [activeSlide]);
+
+  const handleManualScroll = () => {
+    const el = bannerRef.current;
+    if (!el) return;
+    const index = Math.round(el.scrollLeft / el.clientWidth);
+    setActiveSlide(index);
+    if (autoAdvanceRef.current) clearInterval(autoAdvanceRef.current);
+    autoAdvanceRef.current = setInterval(() => {
+      setActiveSlide((i) => (i + 1) % slides.length);
+    }, 5000);
   };
 
   return (
@@ -110,8 +182,8 @@ const Home: React.FC = () => {
 
         {userName && (
           <div className="home-greeting">
-            <p className="home-greeting-subtitle">Welcome back,</p>
-            <p className="home-greeting-name">{userName}</p>
+            <p className="home-greeting-name">Hi, {userName.trim().split(/\s+/)[0]}</p>
+            <p className="home-greeting-subtitle">Welcome back!</p>
           </div>
         )}
 
@@ -132,39 +204,32 @@ const Home: React.FC = () => {
           />
         </div>
 
-        <div className="home-banner">
-          <h2 className="home-banner-title">Care Beyond Borders</h2>
-          <p className="home-banner-subtitle">
-            Wellness essentials for the family you love, delivered anywhere in the Philippines.
-          </p>
-          <button className="home-banner-btn" onClick={() => goToProducts()}>
-            Shop Now
-          </button>
-        </div>
-
-        {categories.length > 0 && (
-          <>
-            <h3 className="shop-section-title">Categories</h3>
-            <div className="shop-categories">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  className="shop-category-pill"
-                  onClick={() => goToProducts({ category: cat })}
-                >
-                  {cat}
+        <div className="home-banner-wrap">
+          <div className="home-banner-carousel" ref={bannerRef} onScroll={handleManualScroll}>
+            {slides.map((slide) => (
+              <div className="home-banner" key={slide.key}>
+                <h2 className="home-banner-title">{slide.title}</h2>
+                <p className="home-banner-subtitle">{slide.subtitle}</p>
+                {slide.code && (
+                  <div className="home-banner-code-chip">
+                    <span>{slide.code}</span>
+                    <IonIcon icon={copyOutline} />
+                  </div>
+                )}
+                <button className="home-banner-btn" onClick={slide.cta.onClick}>
+                  {slide.cta.label}
                 </button>
-              ))}
-            </div>
-          </>
-        )}
-
-        <div className="home-section-header">
-          <h3 className="home-section-title-inline">Featured Products</h3>
-          <span className="home-view-all" onClick={() => goToProducts()}>
-            View All
-          </span>
+              </div>
+            ))}
+          </div>
+          <div className="home-banner-dots">
+            {slides.map((slide, i) => (
+              <span key={slide.key} className={`home-banner-dot ${i === activeSlide ? "active" : ""}`} />
+            ))}
+          </div>
         </div>
+
+        <h3 className="home-section-title-inline home-featured-title">Featured Products</h3>
 
         {loading && (
           <div className="shop-loading">
@@ -178,11 +243,13 @@ const Home: React.FC = () => {
 
         <div className="shop-grid">
           {featuredProducts.map((product) => (
-            <div className="shop-card" key={product.id} onClick={() => navigate(`/product/${product.id}`)}>
-              <div
-                className="shop-card-image-wrap"
-                style={{ background: getCategoryColor(product.category) }}
-              >
+            <div
+              className="shop-card"
+              key={product.id}
+              style={{ background: getCategoryColor(product.category) }}
+              onClick={() => navigate(`/product/${product.id}`)}
+            >
+              <div className="shop-card-image-wrap">
                 <img
                   src={product.imgBase64 || product.img || placeholderImg()}
                   alt={product.name}
@@ -192,11 +259,17 @@ const Home: React.FC = () => {
                   }}
                 />
               </div>
-              <p className="shop-card-name">{product.name}</p>
-              <p className="shop-card-price">{peso(product.price)}</p>
+              <div className="shop-card-info-pill">
+                <p className="shop-card-name">{product.name}</p>
+                <p className="shop-card-price">{peso(product.price)}</p>
+              </div>
             </div>
           ))}
         </div>
+
+        <button className="home-view-all-btn" onClick={() => goToProducts()}>
+          View All Products
+        </button>
       </IonContent>
     </IonPage>
   );

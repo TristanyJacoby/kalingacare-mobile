@@ -167,17 +167,50 @@
   transform: translateX(-50%) translateY(0);
 }
 
+.pd-footer-outer {
+  background: transparent;
+  box-shadow: none;
+}
+
 .pd-footer {
   --background: transparent;
   --border-width: 0;
-  --padding-top: 10px;
-  --padding-bottom: 4px;
-  --padding-start: 20px;
-  --padding-end: 20px;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+.pd-footer-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 24px 4px;
+}
+
+.pd-favorite-btn {
+  flex: 0 0 auto;
+  width: 51px;
+  height: 51px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1.5px solid #dce8f0;
+  color: #94a3b8;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(18, 40, 58, 0.1);
+}
+
+.pd-favorite-btn.active {
+  color: #e0466e;
+  border-color: #f6c9d6;
 }
 
 .pd-add-btn {
-  width: 100%;
+  flex: 1;
   height: 51px;
   background: #67c8f7;
   color: #fff;
@@ -285,13 +318,12 @@
 
 .pd-related-card {
   flex: 0 0 128px;
-  background: #ffffff;
-  border: 1px solid #e6f1fa;
+  border: none;
   border-radius: 18px;
   padding: 10px;
   font-family: "Poppins", sans-serif;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(63, 168, 224, 0.08);
+  box-shadow: 0 4px 14px rgba(63, 168, 224, 0.1);
 }
 
 .pd-related-image-wrap {
@@ -306,6 +338,12 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.pd-related-info-pill {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 7px 9px;
 }
 
 .pd-related-name {

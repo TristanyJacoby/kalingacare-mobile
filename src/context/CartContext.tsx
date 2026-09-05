@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
+import { auth } from '../firebase';
+import { validatePromoCode, computeDiscount, PromoCode } from '../utils/promoCodes';
 
 export interface CartItem {
   id: string;
@@ -24,6 +26,10 @@ interface CartContextValue {
   selectedItems: CartItem[];
   selectedCount: number;
   selectedSubtotal: number;
+  appliedPromo: PromoCode | null;
+  discountAmount: number;
+  applyPromoCode: (code: string) => Promise<{ ok: boolean; message: string }>;
+  clearPromo: () => void;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
@@ -78,6 +84,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const selectedCount = selectedItems.reduce((sum, i) => sum + i.quantity, 0);
   const selectedSubtotal = selectedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
+  const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
+
+  const applyPromoCode = async (code: string) => {
+    const result = await validatePromoCode(code, auth.currentUser?.uid ?? null);
+    if (result.ok) {
+      setAppliedPromo(result.promo);
+      return { ok: true, message: `Applied: ${result.promo.label}` };
+    }
+    return { ok: false, message: result.message };
+  };
+
+  const clearPromo = () => setAppliedPromo(null);
+
+  const discountAmount = computeDiscount(appliedPromo, selectedSubtotal);
+
   return (
     <CartContext.Provider
       value={{
@@ -95,6 +116,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         selectedItems,
         selectedCount,
         selectedSubtotal,
+        appliedPromo,
+        discountAmount,
+        applyPromoCode,
+        clearPromo,
       }}
     >
       {children}

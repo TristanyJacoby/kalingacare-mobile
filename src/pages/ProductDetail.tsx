@@ -1,9 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { IonPage, IonContent, IonFooter, IonToolbar, IonIcon, IonSpinner, useIonToast } from '@ionic/react';
-import { arrowBackOutline, cartOutline, star, starOutline, starHalf } from 'ionicons/icons';
-import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
+import { arrowBackOutline, cartOutline, star, starOutline, starHalf, heart, heartOutline } from 'ionicons/icons';
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+} from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import { useCart } from '../context/CartContext';
 import { canAddToCart } from '../utils/cartGuard';
 import { getCategoryColor } from '../utils/categoryColor';
@@ -78,6 +90,9 @@ const ProductDetail: React.FC = () => {
   const galleryRef = useRef<HTMLDivElement>(null);
   const autoAdvanceRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
 
@@ -93,6 +108,40 @@ const ProductDetail: React.FC = () => {
       setLoading(false);
     })();
   }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    const user = auth.currentUser;
+    if (!user) return;
+    (async () => {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      const favorites: string[] = snap.exists() ? snap.data().favorites || [] : [];
+      setIsFavorited(favorites.includes(id));
+    })();
+  }, [id]);
+
+  const handleToggleFavorite = async () => {
+    const user = auth.currentUser;
+    if (!user || !product) {
+      presentToast({ message: 'Please log in to save favorites.', duration: 2200, color: 'warning' });
+      return;
+    }
+    setFavoriteLoading(true);
+    const userRef = doc(db, 'users', user.uid);
+    try {
+      if (isFavorited) {
+        await updateDoc(userRef, { favorites: arrayRemove(product.id) });
+        setIsFavorited(false);
+      } else {
+        await updateDoc(userRef, { favorites: arrayUnion(product.id) });
+        setIsFavorited(true);
+      }
+    } catch {
+      presentToast({ message: 'Something went wrong. Please try again.', duration: 2200, color: 'danger' });
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
 
   // Reviews for this product, newest first.
   useEffect(() => {
@@ -322,12 +371,10 @@ const ProductDetail: React.FC = () => {
                 <div
                   className="pd-related-card"
                   key={item.id}
+                  style={{ background: getCategoryColor(item.category) }}
                   onClick={() => navigate(`/product/${item.id}`)}
                 >
-                  <div
-                    className="pd-related-image-wrap"
-                    style={{ background: getCategoryColor(item.category) }}
-                  >
+                  <div className="pd-related-image-wrap">
                     <img
                       src={item.imgBase64 || item.img || placeholderImg()}
                       alt={item.name}
@@ -337,8 +384,10 @@ const ProductDetail: React.FC = () => {
                       }}
                     />
                   </div>
-                  <p className="pd-related-name">{item.name}</p>
-                  <p className="pd-related-price">{peso(item.price)}</p>
+                  <div className="pd-related-info-pill">
+                    <p className="pd-related-name">{item.name}</p>
+                    <p className="pd-related-price">{peso(item.price)}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -348,11 +397,21 @@ const ProductDetail: React.FC = () => {
         <div className={`pd-toast ${showAdded ? 'show' : ''}`}>Added to cart</div>
       </IonContent>
 
-      <IonFooter>
+      <IonFooter className="pd-footer-outer">
         <IonToolbar className="pd-footer">
-          <button className="pd-add-btn" onClick={handleAddToCart}>
-            Add to Cart
-          </button>
+          <div className="pd-footer-row">
+            <button
+              className={`pd-favorite-btn ${isFavorited ? 'active' : ''}`}
+              onClick={handleToggleFavorite}
+              disabled={favoriteLoading}
+              aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <IonIcon icon={isFavorited ? heart : heartOutline} />
+            </button>
+            <button className="pd-add-btn" onClick={handleAddToCart}>
+              Add to Cart
+            </button>
+          </div>
         </IonToolbar>
       </IonFooter>
     </IonPage>

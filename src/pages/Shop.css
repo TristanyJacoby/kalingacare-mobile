@@ -165,13 +165,12 @@
 }
 
 .shop-card {
-  background: #ffffff;
-  border: 1px solid #e6f1fa;
+  border: none;
   border-radius: 22px;
   padding: 12px;
   font-family: "Poppins", sans-serif;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(63, 168, 224, 0.08);
+  box-shadow: 0 4px 14px rgba(63, 168, 224, 0.1);
 }
 
 .shop-card-image-wrap {
@@ -180,7 +179,7 @@
   aspect-ratio: 1 / 1;
   border-radius: 16px;
   overflow: hidden;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .shop-card-image {
@@ -189,11 +188,17 @@
   object-fit: cover;
 }
 
+.shop-card-info-pill {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 9px 12px;
+}
+
 .shop-card-name {
   font-weight: 600;
   font-size: 12.5px;
   color: #1e293b;
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;

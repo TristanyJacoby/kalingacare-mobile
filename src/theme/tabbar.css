@@ -4,13 +4,22 @@
    flow underneath them, not overlap on top of their action buttons. The
    "floating" look comes from margin + rounded corners + shadow instead. */
 
+/* Ionic's ion-footer has its own default background independent of the
+   ion-toolbar inside it — making the toolbar transparent alone just reveals
+   this layer behind it, which showed up as a stray gray box. Fixed on the
+   page-specific classes below (pd-footer-outer / cart-footer-outer) rather
+   than globally, since ion-footer's shadow DOM doesn't expose a ::before
+   that's reachable from outside CSS. */
+
 .floating-tab-bar {
   --background: #ffffff;
   background: #ffffff;
   border: none;
-  margin: 0 16px 16px;
-  height: 64px;
-  border-radius: 32px;
+  width: 230px;
+  max-width: 230px;
+  margin: 0 auto 16px;
+  height: 56px;
+  border-radius: 28px;
   box-shadow:
     0 10px 26px rgba(63, 168, 224, 0.22),
     0 2px 8px rgba(18, 40, 58, 0.08);
@@ -24,9 +33,9 @@
 }
 
 .floating-tab-bar ion-tab-button ion-icon {
-  font-size: 21px;
+  font-size: 20px;
   color: #94a3b8;
-  padding: 10px;
+  padding: 8px;
   border-radius: 999px;
   transition:
     background 0.2s ease,

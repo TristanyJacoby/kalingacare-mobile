@@ -167,6 +167,39 @@
   padding: 0 20px 20px;
 }
 
+.cart-promo-applied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #e6f9ee;
+  border: 1px solid #b8ecc9;
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin: 0 20px 20px;
+  font-family: "Poppins", sans-serif;
+}
+
+.cart-promo-applied-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e7a45;
+}
+
+.cart-promo-remove {
+  background: none;
+  border: none;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #d64545;
+  flex-shrink: 0;
+}
+
+.cart-summary-discount .cart-summary-value {
+  color: #1e7a45;
+  font-weight: 700;
+}
+
 .cart-promo-input {
   flex: 1;
   height: 46px;
@@ -233,13 +266,18 @@
   font-weight: 700;
 }
 
+.cart-footer-outer {
+  background: transparent;
+  box-shadow: none;
+}
+
 .cart-footer {
   --background: transparent;
   --border-width: 0;
   --padding-top: 10px;
   --padding-bottom: 4px;
-  --padding-start: 20px;
-  --padding-end: 20px;
+  --padding-start: 24px;
+  --padding-end: 24px;
 }
 
 .cart-checkout-btn {

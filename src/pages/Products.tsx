@@ -138,11 +138,13 @@ const Products: React.FC = () => {
 
         <div className="shop-grid">
           {visibleProducts.map((product) => (
-            <div className="shop-card" key={product.id} onClick={() => navigate(`/product/${product.id}`)}>
-              <div
-                className="shop-card-image-wrap"
-                style={{ background: getCategoryColor(product.category) }}
-              >
+            <div
+              className="shop-card"
+              key={product.id}
+              style={{ background: getCategoryColor(product.category) }}
+              onClick={() => navigate(`/product/${product.id}`)}
+            >
+              <div className="shop-card-image-wrap">
                 <img
                   src={product.imgBase64 || product.img || placeholderImg()}
                   alt={product.name}
@@ -152,8 +154,10 @@ const Products: React.FC = () => {
                   }}
                 />
               </div>
-              <p className="shop-card-name">{product.name}</p>
-              <p className="shop-card-price">{peso(product.price)}</p>
+              <div className="shop-card-info-pill">
+                <p className="shop-card-name">{product.name}</p>
+                <p className="shop-card-price">{peso(product.price)}</p>
+              </div>
             </div>
           ))}
         </div>

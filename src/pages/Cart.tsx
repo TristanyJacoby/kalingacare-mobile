@@ -24,12 +24,29 @@ function placeholderImg() {
 const Cart: React.FC = () => {
   const navigate = useNavigate();
   const [presentToast] = useIonToast();
-  const { items, updateQuantity, toggleSelected, selectAll, deselectAll, selectedCount, selectedSubtotal } =
-    useCart();
+  const {
+    items,
+    updateQuantity,
+    toggleSelected,
+    selectAll,
+    deselectAll,
+    selectedCount,
+    selectedSubtotal,
+    appliedPromo,
+    discountAmount,
+    applyPromoCode,
+    clearPromo,
+  } = useCart();
   const [promoCode, setPromoCode] = useState('');
+  const [applyingPromo, setApplyingPromo] = useState(false);
 
-  const handleApplyPromo = () => {
-    presentToast({ message: "Promo codes aren't available yet.", duration: 2200, color: 'medium' });
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) return;
+    setApplyingPromo(true);
+    const result = await applyPromoCode(promoCode);
+    presentToast({ message: result.message, duration: 2400, color: result.ok ? 'success' : 'warning' });
+    if (result.ok) setPromoCode('');
+    setApplyingPromo(false);
   };
 
   const allSelected = items.length > 0 && items.every((i) => i.selected);
@@ -133,18 +150,29 @@ const Cart: React.FC = () => {
         </div>
 
         <h3 className="cart-section-title">Promo Code</h3>
-        <div className="cart-promo-row">
-          <input
-            type="text"
-            placeholder="Enter code"
-            className="cart-promo-input"
-            value={promoCode}
-            onChange={(e) => setPromoCode(e.target.value)}
-          />
-          <button className="cart-promo-btn" onClick={handleApplyPromo}>
-            Apply
-          </button>
-        </div>
+        {appliedPromo ? (
+          <div className="cart-promo-applied">
+            <span className="cart-promo-applied-label">
+              "{appliedPromo.code}" applied — {appliedPromo.label}
+            </span>
+            <button className="cart-promo-remove" onClick={clearPromo}>
+              Remove
+            </button>
+          </div>
+        ) : (
+          <div className="cart-promo-row">
+            <input
+              type="text"
+              placeholder="Enter code"
+              className="cart-promo-input"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value)}
+            />
+            <button className="cart-promo-btn" onClick={handleApplyPromo} disabled={applyingPromo}>
+              {applyingPromo ? '...' : 'Apply'}
+            </button>
+          </div>
+        )}
 
         <div className="cart-summary-card">
           <div className="cart-summary-row">
@@ -155,17 +183,23 @@ const Cart: React.FC = () => {
             <span>Shipping</span>
             <span className="cart-summary-value">{peso(SHIPPING_FEE)}</span>
           </div>
+          {discountAmount > 0 && (
+            <div className="cart-summary-row cart-summary-discount">
+              <span>Discount</span>
+              <span className="cart-summary-value">-{peso(discountAmount)}</span>
+            </div>
+          )}
           <div className="cart-summary-divider" />
           <div className="cart-summary-row cart-summary-total">
             <span>Total</span>
             <span className="cart-summary-value cart-summary-total-value">
-              {peso(selectedSubtotal + SHIPPING_FEE)}
+              {peso(selectedSubtotal + SHIPPING_FEE - discountAmount)}
             </span>
           </div>
         </div>
       </IonContent>
 
-      <IonFooter>
+      <IonFooter className="cart-footer-outer">
         <IonToolbar className="cart-footer">
           <button className="cart-checkout-btn" onClick={handleCheckout}>
             Proceed to Checkout
