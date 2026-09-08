@@ -12,7 +12,6 @@ import {
   collection,
   query,
   where,
-  orderBy,
   getDocs,
   doc,
   updateDoc,
@@ -88,18 +87,30 @@ const MyOrders: React.FC = () => {
         const q = query(
           collection(db, "orders"),
           where("userId", "==", user.uid),
-          orderBy("createdAt", "desc"),
         );
         const snap = await getDocs(q);
-        setOrders(
-          snap.docs.map((d) => ({
-            id: d.id,
-            ...(d.data() as Omit<Order, "id">),
-          })),
-        );
+        const fetchedOrders = snap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<Order, "id">),
+        }));
+        // Sort newest first in app code instead of asking Firestore to do
+        // it, since orders without a createdAt yet (rare, but possible
+        // right after placing one) are pushed to the end instead of
+        // breaking the sort.
+        fetchedOrders.sort((a, b) => {
+          const aTime = a.createdAt?.toDate().getTime() ?? 0;
+          const bTime = b.createdAt?.toDate().getTime() ?? 0;
+          return bTime - aTime;
+        });
+        setOrders(fetchedOrders);
       } catch (err) {
         console.error("MyOrders fetch failed:", err);
         setOrders([]);
+        presentToast({
+          message: "Could not load your orders. Please try again.",
+          duration: 2500,
+          color: "danger",
+        });
       }
       setLoading(false);
     })();

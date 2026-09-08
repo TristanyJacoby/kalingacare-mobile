@@ -199,7 +199,7 @@ const Cart: React.FC = () => {
         </div>
       </IonContent>
 
-      <IonFooter className="cart-footer-outer">
+      <IonFooter className="cart-footer-outer ion-no-border">
         <IonToolbar className="cart-footer">
           <button className="cart-checkout-btn" onClick={handleCheckout}>
             Proceed to Checkout

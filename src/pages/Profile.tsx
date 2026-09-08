@@ -18,7 +18,7 @@ import { auth, db } from "../firebase";
 import "./Profile.css";
 
 import { useRef } from "react";
-import { resizeImageToBase64 } from "../utils/imageResize";
+import AvatarCropModal from "../components/AvatarCropModal";
 
 const ROLE_LABELS: Record<string, string> = {
   user: "User",
@@ -53,6 +53,9 @@ const Profile: React.FC = () => {
   const [notificationsOn, setNotificationsOn] = useState(true);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  // The raw photo the user just picked, shown in the crop step before it
+  // is saved. null means the crop screen isn't open.
+  const [pendingImageSrc, setPendingImageSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -87,24 +90,40 @@ const Profile: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Don't save right away — read the picture and open the crop step so
+    // the user can reposition or zoom before it becomes their avatar.
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPendingImageSrc(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropCancel = () => {
+    setPendingImageSrc(null);
+    // Reset the input so picking the *same* file again still triggers
+    // onChange (browsers otherwise ignore a "repeat" selection).
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleCropConfirm = async (croppedDataUrl: string) => {
     const user = auth.currentUser;
     if (!user) return;
 
+    setPendingImageSrc(null);
     setUploading(true);
     try {
-      const base64 = await resizeImageToBase64(file);
-
-      await updateDoc(doc(db, "users", user.uid), { photoBase64: base64 });
+      await updateDoc(doc(db, "users", user.uid), {
+        photoBase64: croppedDataUrl,
+      });
 
       // Update what's shown right away, without needing to reload the page.
-      setPhotoBase64(base64);
+      setPhotoBase64(croppedDataUrl);
     } catch {
       // Keep this simple — a failed avatar upload isn't critical enough to
       // need a fancy error screen, just quietly stop the loading spinner.
     } finally {
       setUploading(false);
-      // Reset the input so picking the *same* file again still triggers
-      // onChange (browsers otherwise ignore a "repeat" selection).
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -260,6 +279,14 @@ const Profile: React.FC = () => {
           </button>
         </div>
       </IonContent>
+
+      {pendingImageSrc && (
+        <AvatarCropModal
+          imageSrc={pendingImageSrc}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCropCancel}
+        />
+      )}
     </IonPage>
   );
 };

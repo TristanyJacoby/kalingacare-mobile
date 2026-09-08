@@ -293,7 +293,6 @@ const ProductDetail: React.FC = () => {
             className="pd-gallery"
             ref={galleryRef}
             onScroll={handleManualScroll}
-            style={{ background: getCategoryColor(product.category) }}
           >
             {galleryImages.map((src, i) => (
               <div className="pd-gallery-slide" key={i}>
@@ -397,7 +396,7 @@ const ProductDetail: React.FC = () => {
         <div className={`pd-toast ${showAdded ? 'show' : ''}`}>Added to cart</div>
       </IonContent>
 
-      <IonFooter className="pd-footer-outer">
+      <IonFooter className="pd-footer-outer ion-no-border">
         <IonToolbar className="pd-footer">
           <div className="pd-footer-row">
             <button

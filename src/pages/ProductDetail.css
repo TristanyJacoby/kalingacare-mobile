@@ -52,6 +52,7 @@
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   border-radius: 0 0 28px 28px;
+  background: #ffffff;
 }
 
 .pd-gallery::-webkit-scrollbar {

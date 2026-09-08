@@ -49,3 +49,12 @@
   transform: translateY(-2px);
   box-shadow: 0 6px 14px rgba(103, 200, 247, 0.45);
 }
+
+/* Safety net for the Adjust Photo (avatar crop) screen: that screen
+   renders itself above everything via a portal to <body>, but we also
+   hide this bar outright while it's open so it can never show through
+   or catch a stray tap underneath the crop screen. Toggled by
+   AvatarCropModal.tsx adding/removing "crop-modal-open" on <body>. */
+body.crop-modal-open .floating-tab-bar {
+  display: none;
+}

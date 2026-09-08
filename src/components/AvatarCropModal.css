@@ -1,0 +1,164 @@
+.crop-overlay {
+  position: fixed;
+  inset: 0;
+  /* Very high z-index since this now renders as a direct child of
+     <body> via a portal (see AvatarCropModal.tsx) — it needs to sit
+     above every other part of the app, including the floating tab bar. */
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.94);
+  display: flex;
+  flex-direction: column;
+  font-family: "Poppins", sans-serif;
+}
+
+.crop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(16px, env(safe-area-inset-top)) 20px 12px;
+}
+
+.crop-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #ffffff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crop-confirm-btn {
+  background: #3fa8e0;
+}
+
+.crop-confirm-btn:disabled {
+  opacity: 0.5;
+}
+
+.crop-title {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.crop-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 0 24px max(16px, env(safe-area-inset-bottom));
+}
+
+.crop-frame {
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 0 2000px rgba(15, 23, 42, 0.3);
+  outline: 2px solid rgba(255, 255, 255, 0.45);
+  cursor: grab;
+  touch-action: none;
+  flex-shrink: 0;
+}
+
+.crop-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: none;
+  transform-origin: center center;
+  user-select: none;
+  pointer-events: none;
+}
+
+.crop-move-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(15, 23, 42, 0.25);
+  pointer-events: none;
+}
+
+.crop-hint {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  margin: 0;
+}
+
+.crop-controls {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.crop-controls-label {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.crop-zoom-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 24px;
+  background: transparent;
+  margin: 0;
+}
+
+/* WebKit (Chrome/Safari/most mobile webviews) */
+.crop-zoom-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.crop-zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #3fa8e0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* Firefox */
+.crop-zoom-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.crop-zoom-slider::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: #3fa8e0;
+}
+
+.crop-zoom-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #3fa8e0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
