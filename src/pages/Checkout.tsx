@@ -66,12 +66,18 @@ const Checkout: React.FC = () => {
         return;
       }
 
-      const savedAddress = data?.savedAddress;
-      if (savedAddress) {
-        setRecipientName(savedAddress.recipient || '');
-        setAddress(savedAddress.address || '');
-        setContactNumber(savedAddress.phone || '');
-        setSavedCoords({ lat: savedAddress.lat ?? null, lng: savedAddress.lng ?? null });
+      const addressList = data?.savedAddresses;
+      const defaultAddress = addressList?.find((a: any) => a.isDefault) || addressList?.[0];
+
+      if (defaultAddress) {
+        setRecipientName(defaultAddress.recipient || '');
+        setAddress(defaultAddress.address || '');
+        setContactNumber(defaultAddress.phone || '');
+      } else if (data?.savedAddress) {
+        const legacy = data.savedAddress;
+        setRecipientName(legacy.recipient || '');
+        setAddress(legacy.address || '');
+        setContactNumber(legacy.phone || '');
       }
 
       setCheckingAccess(false);

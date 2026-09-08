@@ -174,3 +174,39 @@
 .profile-menu-label-danger {
   color: #d64545;
 }
+
+.profile-avatar {
+  position: relative;
+  cursor: pointer;
+}
+
+.profile-avatar-edit-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 24px;
+  height: 24px;
+  background: #3fa8e0;
+  border: 2px solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+}
+
+.profile-avatar-spinner {
+  width: 10px;
+  height: 10px;
+  border: 2px solid white;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: profile-avatar-spin 0.6s linear infinite;
+}
+
+@keyframes profile-avatar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
