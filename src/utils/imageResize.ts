@@ -1,48 +1,43 @@
-// Shrinks and compresses an image file down to something small enough to
-// safely store as a Firestore text field (base64), and returns it as a
-// base64 string ready to save directly to the user's profile.
-export function resizeImageToBase64(
+/**
+ * Resizes and compresses an image file down to a base64 data URL small
+ * enough to safely store directly on a Firestore document. A raw phone
+ * photo is often several MB — well past Firestore's 1MB document limit —
+ * so this always downsizes before returning.
+ */
+export function resizeImageToDataUrl(
   file: File,
-  maxSize = 300,
+  maxDimension = 800,
   quality = 0.7,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-
+    reader.onerror = () => reject(new Error('Could not read the selected file.'));
     reader.onload = () => {
       const img = new Image();
-
+      img.onerror = () => reject(new Error('Could not load the selected image.'));
       img.onload = () => {
-        // Figure out new width/height, keeping things square-ish and
-        // capped at maxSize (300px is plenty for a small avatar circle).
-        const canvas = document.createElement("canvas");
-        canvas.width = maxSize;
-        canvas.height = maxSize;
-
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          reject(new Error("Could not process image."));
-          return;
+        let { width, height } = img;
+        if (width > height && width > maxDimension) {
+          height = Math.round((height * maxDimension) / width);
+          width = maxDimension;
+        } else if (height > maxDimension) {
+          width = Math.round((width * maxDimension) / height);
+          height = maxDimension;
         }
 
-        // Crop to a centered square before resizing, so the avatar
-        // doesn't come out stretched or squished.
-        const side = Math.min(img.width, img.height);
-        const sx = (img.width - side) / 2;
-        const sy = (img.height - side) / 2;
-
-        ctx.drawImage(img, sx, sy, side, side, 0, 0, maxSize, maxSize);
-
-        // Convert the canvas into a compressed JPEG base64 string.
-        const base64 = canvas.toDataURL("image/jpeg", quality);
-        resolve(base64);
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Canvas not supported.'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
       };
-
-      img.onerror = () => reject(new Error("Could not load image."));
       img.src = reader.result as string;
     };
-
-    reader.onerror = () => reject(new Error("Could not read file."));
     reader.readAsDataURL(file);
   });
 }

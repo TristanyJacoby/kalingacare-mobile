@@ -21,6 +21,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 //TBC
 import Favorites from './pages/Favorites';
+import WriteReview from './pages/WriteReview';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -79,6 +80,7 @@ const App: React.FC = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/favorites" element={<Favorites />} />
+            <Route path="/review/:orderId/:productId" element={<WriteReview />} />
           </IonRouterOutlet>
 
           {/* Icon-only floating pill nav — labels removed for the new design;

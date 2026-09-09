@@ -33,3 +33,4 @@ yarn-error.log*
 # native platforms
 /ios
 /android
+.DS_Store

@@ -74,6 +74,11 @@ const MyOrders: React.FC = () => {
   // Tracks which specific order is mid-cancel, so only that one card shows
   // a "Cancelling…" state instead of disabling every button on the page.
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  // Set of "orderId:productId" strings this user has already reviewed —
+  // used to show "Reviewed" instead of a Leave a Review button, since
+  // Firestore's reviews rule doesn't allow editing/deleting one once
+  // created (so preventing a duplicate submission has to happen here).
+  const [reviewedKeys, setReviewedKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -103,6 +108,21 @@ const MyOrders: React.FC = () => {
           return bTime - aTime;
         });
         setOrders(fetchedOrders);
+
+        // Find which order+product combos already have a review from this
+        // user, so the buttons below can reflect that correctly.
+        const reviewsQ = query(
+          collection(db, "reviews"),
+          where("userId", "==", user.uid),
+        );
+        const reviewsSnap = await getDocs(reviewsQ);
+        const keys = new Set(
+          reviewsSnap.docs.map((d) => {
+            const data = d.data();
+            return `${data.orderId}:${data.productId}`;
+          }),
+        );
+        setReviewedKeys(keys);
       } catch (err) {
         console.error("MyOrders fetch failed:", err);
         setOrders([]);
@@ -199,17 +219,35 @@ const MyOrders: React.FC = () => {
                   </div>
 
                   <div className="orders-items">
-                    {order.items.map((item, i) => (
-                      <div className="orders-item-row" key={i}>
-                        <span className="orders-item-name">
-                          {item.name}{" "}
-                          <span className="orders-item-qty">x{item.qty}</span>
-                        </span>
-                        <span className="orders-item-price">
-                          {peso(item.price * item.qty)}
-                        </span>
-                      </div>
-                    ))}
+                    {order.items.map((item, i) => {
+                      const reviewKey = `${order.id}:${item.id}`;
+                      const alreadyReviewed = reviewedKeys.has(reviewKey);
+                      return (
+                        <div className="orders-item-row" key={i}>
+                          <div className="orders-item-main">
+                            <span className="orders-item-name">
+                              {item.name}{" "}
+                              <span className="orders-item-qty">x{item.qty}</span>
+                            </span>
+                            <span className="orders-item-price">
+                              {peso(item.price * item.qty)}
+                            </span>
+                          </div>
+                          {displayStatus === "Delivered" && (
+                            alreadyReviewed ? (
+                              <span className="orders-reviewed-label">Reviewed</span>
+                            ) : (
+                              <button
+                                className="orders-review-btn"
+                                onClick={() => navigate(`/review/${order.id}/${item.id}`)}
+                              >
+                                Leave a Review
+                              </button>
+                            )
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
 
                   <div className="orders-total-row">

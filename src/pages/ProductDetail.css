@@ -52,7 +52,6 @@
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   border-radius: 0 0 28px 28px;
-  background: #ffffff;
 }
 
 .pd-gallery::-webkit-scrollbar {
@@ -295,6 +294,15 @@
   color: #64748b;
   line-height: 1.5;
   margin: 0;
+}
+
+.pd-review-photo {
+  width: 84px;
+  height: 84px;
+  border-radius: 12px;
+  object-fit: cover;
+  margin-top: 10px;
+  display: block;
 }
 
 .pd-related {

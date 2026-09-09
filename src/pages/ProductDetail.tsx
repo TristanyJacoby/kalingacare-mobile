@@ -43,6 +43,7 @@ interface Review {
   userName: string;
   rating: number;
   text: string;
+  photoBase64?: string;
   createdAt?: { toDate: () => Date };
 }
 
@@ -293,6 +294,7 @@ const ProductDetail: React.FC = () => {
             className="pd-gallery"
             ref={galleryRef}
             onScroll={handleManualScroll}
+            style={{ background: getCategoryColor(product.category) }}
           >
             {galleryImages.map((src, i) => (
               <div className="pd-gallery-slide" key={i}>
@@ -356,6 +358,9 @@ const ProductDetail: React.FC = () => {
                     <StarRow value={review.rating} />
                   </div>
                   {review.text && <p className="pd-review-text">{review.text}</p>}
+                  {review.photoBase64 && (
+                    <img src={review.photoBase64} alt="Customer photo" className="pd-review-photo" />
+                  )}
                 </div>
               ))}
             </div>
@@ -396,7 +401,7 @@ const ProductDetail: React.FC = () => {
         <div className={`pd-toast ${showAdded ? 'show' : ''}`}>Added to cart</div>
       </IonContent>
 
-      <IonFooter className="pd-footer-outer ion-no-border">
+      <IonFooter className="pd-footer-outer">
         <IonToolbar className="pd-footer">
           <div className="pd-footer-row">
             <button
