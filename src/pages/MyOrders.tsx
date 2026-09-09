@@ -50,7 +50,7 @@ const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
 // Only these statuses allow cancelling — matches web's business rule
 // (mentioned in the project doc) that an order can't be cancelled once
 // it's already shipped.
-const CANCELLABLE_STATUSES = ["Pending", "Processing"];
+const CANCELLABLE_STATUSES = ["New", "Pending", "Processing"];
 
 function peso(amount: number) {
   return "₱" + amount.toLocaleString("en-PH");
@@ -171,8 +171,13 @@ const MyOrders: React.FC = () => {
         ) : (
           <div className="orders-list">
             {orders.map((order) => {
+              // Customers see "Pending" even when the real status is "New" —
+              // that's purely about whether staff has opened the order yet.
+              // Matches the same normalization on web's profile.js.
+              const displayStatus =
+                order.status === "New" ? "Pending" : order.status;
               const statusStyle =
-                STATUS_STYLES[order.status] || STATUS_STYLES.Pending;
+                STATUS_STYLES[displayStatus] || STATUS_STYLES.Pending;
               const canCancel = CANCELLABLE_STATUSES.includes(order.status);
               const isCancelling = cancellingId === order.id;
 
@@ -189,7 +194,7 @@ const MyOrders: React.FC = () => {
                         color: statusStyle.color,
                       }}
                     >
-                      {order.status}
+                      {displayStatus}
                     </span>
                   </div>
 

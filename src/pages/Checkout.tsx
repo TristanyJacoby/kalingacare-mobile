@@ -111,7 +111,7 @@ const Checkout: React.FC = () => {
         promoCode: appliedPromo?.code ?? null,
         discount: discountAmount,
         total: selectedSubtotal + SHIPPING_FEE - discountAmount,
-        status: 'Pending',
+        status: 'New',
         shippingInfo: {
           fullName,
           email,
