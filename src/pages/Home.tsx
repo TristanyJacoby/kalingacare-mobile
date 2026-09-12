@@ -100,7 +100,7 @@ const Home: React.FC = () => {
   const handleCopyCode = async (code: string) => {
     try {
       await navigator.clipboard.writeText(code);
-      presentToast({ message: `Copied "${code}" — paste it in Cart to apply.`, duration: 2200, color: "success" });
+      presentToast({ message: `Copied "${code}" — paste it in Cart to appllly.`, duration: 2200, color: "success" });
     } catch {
       presentToast({ message: `Your code: ${code}`, duration: 3000, color: "medium" });
     }
