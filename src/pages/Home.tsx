@@ -1,26 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { IonContent, IonPage, IonIcon, IonSpinner, useIonToast } from "@ionic/react";
-import { searchOutline, notificationsOutline, copyOutline } from "ionicons/icons";
+import { IonContent, IonPage, IonIcon, IonSpinner, useIonToast, IonMenuButton } from "@ionic/react";
+import { searchOutline, notificationsOutline, copyOutline, menuOutline, cardOutline, cubeOutline, star, starHalf, starOutline } from "ionicons/icons";
 import { collection, query, orderBy, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { initials } from "../utils/avatar";
-import { getCategoryColor } from "../utils/categoryColor";
+import { getRates, type RatesResult } from "../utils/currency";
+import ProductCard, { type CardProduct } from "../components/ProductCard";
 import logo from "../assets/kalingacare-logo.png";
 import "./Shop.css";
 import "./Home.css";
-
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  subcategory?: string;
-  price: number;
-  stock?: number;
-  img?: string;
-  imgBase64?: string;
-}
 
 interface BannerSlide {
   key: string;
@@ -30,45 +20,103 @@ interface BannerSlide {
   code?: string;
 }
 
-function peso(amount: number) {
-  return "₱" + amount.toLocaleString("en-PH");
-}
-
-function placeholderImg() {
-  return (
-    "data:image/svg+xml;utf8," +
-    encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="136" height="136"><rect width="136" height="136" fill="#f1f5f9"/><text x="68" y="72" font-size="11" fill="#94a3b8" text-anchor="middle" font-family="sans-serif">No image</text></svg>`,
-    )
-  );
-}
-
 // No "featured"/"popular" flag exists in Firestore yet, so this just takes
 // the first few products from the live catalog rather than a real
 // popularity ranking. Swap this out if an admin-settable "featured" field
 // gets added later.
 const FEATURED_COUNT = 4;
 
+// Same "How It Works" 3 steps shown on the web app's landing page.
+const HOW_IT_WORKS = [
+  {
+    icon: searchOutline,
+    title: "1. Browse",
+    desc: "Explore mobility aids, wellness essentials, and digital health devices made for seniors.",
+  },
+  {
+    icon: cardOutline,
+    title: "2. Order & Pay",
+    desc: "Check out securely from wherever you are — pay with Cash on Delivery, priced fairly in PHP.",
+  },
+  {
+    icon: cubeOutline,
+    title: "3. We Deliver",
+    desc: "Your order goes straight to your family's doorstep, anywhere in the Philippines.",
+  },
+];
+
+// Same illustrative reviews shown on the web app's landing page.
+const REVIEWS = [
+  {
+    rating: 5,
+    quote:
+      "Ordering a blood pressure monitor for my mom in Batangas took five minutes from my phone here in Dubai. It arrived in three days — no more asking relatives to buy it for her.",
+    name: "Marites R.",
+    location: "OFW · Dubai, UAE",
+  },
+  {
+    rating: 5,
+    quote:
+      "The walker and shower bench we ordered for my father were exactly what the doctor recommended. Knowing the money went straight to his care, not somewhere else, gives me real peace of mind.",
+    name: "Jun D.",
+    location: "OFW · Riyadh, Saudi Arabia",
+  },
+  {
+    rating: 4.5,
+    quote:
+      "I love that I can see my order history and track what's already been delivered to my parents. The site is simple enough that even my mom can show me what she still needs.",
+    name: "Corazon L.",
+    location: "OFW · Vancouver, Canada",
+  },
+];
+
+// Turns a 0–5 rating into 5 star icons — full, half, or empty as needed.
+function renderStars(rating: number) {
+  return Array.from({ length: 5 }, (_, i) => {
+    const filled = rating - i;
+    const icon = filled >= 1 ? star : filled >= 0.5 ? starHalf : starOutline;
+    return <IonIcon key={i} icon={icon} className="home-review-star" />;
+  });
+}
+
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const [presentToast] = useIonToast();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<CardProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
 
   const [userName, setUserName] = useState("");
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
 
+  const [displayCurrency, setDisplayCurrency] = useState("PHP");
+  const [rates, setRates] = useState<RatesResult | null>(null);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+
+  const handleFavoriteChange = (id: string, isFavorited: boolean) => {
+    setFavoriteIds((prev) => {
+      const next = new Set(prev);
+      if (isFavorited) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    getRates().then(setRates);
+  }, []);
+
   const [activeSlide, setActiveSlide] = useState(0);
   const bannerRef = useRef<HTMLDivElement>(null);
   const autoAdvanceRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const scrollAnimRef = useRef<number | null>(null);
 
   useEffect(() => {
     const q = query(collection(db, "products"), orderBy("name"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const list: Product[] = snapshot.docs.map((doc) => ({
+      const list: CardProduct[] = snapshot.docs.map((doc) => ({
         id: doc.id,
-        ...(doc.data() as Omit<Product, "id">),
+        ...(doc.data() as Omit<CardProduct, "id">),
       }));
       setProducts(list);
       setLoading(false);
@@ -78,11 +126,16 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) return;
+      if (!user) {
+        setFavoriteIds(new Set());
+        return;
+      }
       const snap = await getDoc(doc(db, "users", user.uid));
       const data = snap.exists() ? (snap.data() as any) : {};
       setUserName(user.displayName || data.fullName || "");
       setUserPhoto(data.photoBase64 || null);
+      if (data.currency) setDisplayCurrency(data.currency);
+      setFavoriteIds(new Set(data.favorites || []));
     });
     return () => unsubscribe();
   }, []);
@@ -133,37 +186,122 @@ const Home: React.FC = () => {
     [],
   );
 
-  // Auto-advance the banner carousel every 5s.
-  useEffect(() => {
+  // Tracks whether the *next* activeSlide change should trigger our own
+  // eased scroll animation. Only set right before we change the slide
+  // ourselves (auto-advance). Left false for changes that come from the
+  // user's own finger — see the note on handleManualScroll below for why.
+  const isProgrammaticSlideChange = useRef(false);
+  const manualScrollSettleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scheduleAutoAdvance = () => {
+    if (autoAdvanceRef.current) clearInterval(autoAdvanceRef.current);
     autoAdvanceRef.current = setInterval(() => {
+      isProgrammaticSlideChange.current = true;
       setActiveSlide((i) => (i + 1) % slides.length);
     }, 5000);
+  };
+
+  // Auto-advance the banner carousel every 5s.
+  useEffect(() => {
+    scheduleAutoAdvance();
     return () => {
       if (autoAdvanceRef.current) clearInterval(autoAdvanceRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slides.length]);
 
-  useEffect(() => {
+  // Each slide's true width includes the 12px gap between slides (see
+  // .home-banner-carousel's `gap` in Home.css) — using el.clientWidth alone
+  // here used to drift out of sync with the actual scroll-snap positions
+  // after the first slide, which is what made the carousel look messy.
+  const slideStep = () => {
+    const el = bannerRef.current;
+    if (!el) return 0;
+    const firstSlide = el.firstElementChild as HTMLElement | null;
+    if (!firstSlide) return el.clientWidth;
+    const gap = parseFloat(getComputedStyle(el).columnGap || "0");
+    return firstSlide.getBoundingClientRect().width + gap;
+  };
+
+  // Eases the carousel over to a slide by hand instead of relying on the
+  // browser's built-in smooth scrollTo. With scroll-snap turned on,
+  // smooth scrollTo tends to just jump straight to the snap point on a
+  // lot of phone browsers/webviews instead of gliding there, which is
+  // what made auto-advance look like an instant cut. Animating
+  // scrollLeft ourselves, frame by frame, always glides.
+  const animateScrollTo = (target: number, duration = 420) => {
     const el = bannerRef.current;
     if (!el) return;
-    el.scrollTo({ left: activeSlide * el.clientWidth, behavior: "smooth" });
+    if (scrollAnimRef.current !== null) cancelAnimationFrame(scrollAnimRef.current);
+
+    const start = el.scrollLeft;
+    const distance = target - start;
+    const startTime = performance.now();
+    // Ease in, then ease out — starts and ends gently instead of a hard
+    // linear slide.
+    const easeInOutQuad = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+
+    const step = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      el.scrollLeft = start + distance * easeInOutQuad(progress);
+      if (progress < 1) {
+        scrollAnimRef.current = requestAnimationFrame(step);
+      } else {
+        scrollAnimRef.current = null;
+      }
+    };
+
+    scrollAnimRef.current = requestAnimationFrame(step);
+  };
+
+  useEffect(() => {
+    // Only animate here for changes WE made (auto-advance). If this
+    // change came from the user dragging the carousel themselves, the
+    // browser already scrolled it there natively — animating scrollLeft
+    // on top of that would fight the user's own finger/momentum and is
+    // exactly what caused the carousel to jitter when swiped by hand.
+    if (isProgrammaticSlideChange.current) {
+      isProgrammaticSlideChange.current = false;
+      animateScrollTo(activeSlide * slideStep());
+    }
   }, [activeSlide]);
 
+  useEffect(() => {
+    return () => {
+      if (scrollAnimRef.current !== null) cancelAnimationFrame(scrollAnimRef.current);
+      if (manualScrollSettleRef.current) clearTimeout(manualScrollSettleRef.current);
+    };
+  }, []);
+
+  // Fires continuously while the user drags/flicks the carousel — once
+  // per frame, not once per swipe. We only want to react once the
+  // scrolling has actually settled, so this just resets a short timer on
+  // every event and does the real work when the timer finally fires
+  // uninterrupted. This also avoids re-triggering the eased animation
+  // above mid-swipe, which was the root cause of the jittery feeling.
   const handleManualScroll = () => {
-    const el = bannerRef.current;
-    if (!el) return;
-    const index = Math.round(el.scrollLeft / el.clientWidth);
-    setActiveSlide(index);
-    if (autoAdvanceRef.current) clearInterval(autoAdvanceRef.current);
-    autoAdvanceRef.current = setInterval(() => {
-      setActiveSlide((i) => (i + 1) % slides.length);
-    }, 5000);
+    if (manualScrollSettleRef.current) clearTimeout(manualScrollSettleRef.current);
+    manualScrollSettleRef.current = setTimeout(() => {
+      const el = bannerRef.current;
+      if (!el) return;
+      const step = slideStep();
+      const index = step ? Math.round(el.scrollLeft / step) : 0;
+      // Not flagged as programmatic — the browser's own scroll-snap
+      // already landed exactly on this slide, so this just updates the
+      // dots to match, nothing more.
+      setActiveSlide(index);
+      scheduleAutoAdvance();
+    }, 120);
   };
 
   return (
     <IonPage>
       <IonContent fullscreen className="home-content">
         <div className="shop-header">
+          <IonMenuButton className="shop-menu-btn" aria-label="Menu">
+            <IonIcon icon={menuOutline} />
+          </IonMenuButton>
           <img src={logo} alt="KalingaCare" className="shop-logo" />
           <span className="shop-appname">KalingaCare</span>
           <div className="shop-header-icons">
@@ -229,6 +367,23 @@ const Home: React.FC = () => {
           </div>
         </div>
 
+        <div className="home-section">
+          <span className="home-section-badge">How It Works</span>
+          <h3 className="home-section-title">Care in Three Simple Steps</h3>
+
+          <div className="home-steps-list">
+            {HOW_IT_WORKS.map((step) => (
+              <div className="home-step-card" key={step.title}>
+                <div className="home-step-icon">
+                  <IonIcon icon={step.icon} />
+                </div>
+                <p className="home-step-title">{step.title}</p>
+                <p className="home-step-desc">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <h3 className="home-section-title-inline home-featured-title">Featured Products</h3>
 
         {loading && (
@@ -243,33 +398,40 @@ const Home: React.FC = () => {
 
         <div className="shop-grid">
           {featuredProducts.map((product) => (
-            <div
-              className="shop-card"
+            <ProductCard
               key={product.id}
-              style={{ background: getCategoryColor(product.category) }}
-              onClick={() => navigate(`/product/${product.id}`)}
-            >
-              <div className="shop-card-image-wrap">
-                <img
-                  src={product.imgBase64 || product.img || placeholderImg()}
-                  alt={product.name}
-                  className="shop-card-image"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = placeholderImg();
-                  }}
-                />
-              </div>
-              <div className="shop-card-info-pill">
-                <p className="shop-card-name">{product.name}</p>
-                <p className="shop-card-price">{peso(product.price)}</p>
-              </div>
-            </div>
+              product={product}
+              onOpen={(id) => navigate(`/product/${id}`)}
+              displayCurrency={displayCurrency}
+              rates={rates}
+              favoriteIds={favoriteIds}
+              onFavoriteChange={handleFavoriteChange}
+            />
           ))}
         </div>
 
         <button className="home-view-all-btn" onClick={() => goToProducts()}>
           View All Products
         </button>
+
+        <div className="home-section">
+          <span className="home-section-badge">Customer Reviews</span>
+          <h3 className="home-section-title">Trusted by OFW Families</h3>
+          <p className="home-section-subtitle">Real stories from customers caring for their loved ones from abroad.</p>
+
+          <div className="home-review-list">
+            {REVIEWS.map((review) => (
+              <div className="home-review-card" key={review.name}>
+                <div className="home-review-stars">{renderStars(review.rating)}</div>
+                <p className="home-review-quote">&quot;{review.quote}&quot;</p>
+                <p className="home-review-name">{review.name}</p>
+                <p className="home-review-location">{review.location}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="home-review-disclaimer">Illustrative reviews for demonstration purposes.</p>
+        </div>
       </IonContent>
     </IonPage>
   );

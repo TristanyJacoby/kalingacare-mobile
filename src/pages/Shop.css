@@ -3,11 +3,24 @@
 }
 
 .shop-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f2f9ff;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: max(16px, env(safe-area-inset-top)) 20px 12px;
   font-family: "Poppins", sans-serif;
+}
+
+.shop-menu-btn {
+  --padding-start: 0;
+  --padding-end: 0;
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+  color: #1e293b;
 }
 
 .shop-logo {
@@ -109,11 +122,24 @@
   font-family: "Poppins", sans-serif;
 }
 
+.shop-filter-bar {
+  position: sticky;
+  /* Sits directly under the now-sticky .shop-header instead of at the
+     very top, so the two don't overlap when both are stuck. This
+     matches .shop-header's own padding math (top padding + its ~32px
+     row of icons + bottom padding). */
+  top: calc(max(16px, env(safe-area-inset-top)) + 44px);
+  z-index: 3;
+  background: #f2f9ff;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+
 .shop-categories {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   overflow-x: auto;
-  padding: 0 20px 20px;
+  padding: 4px 20px 16px;
   scrollbar-width: none;
 }
 
@@ -123,28 +149,51 @@
 
 .shop-category-pill {
   flex-shrink: 0;
-  border: none;
+  border: 1px solid #d7ecfb;
   border-radius: 999px;
-  padding: 9px 17px;
-  font-size: 12.5px;
+  padding: 8px 16px;
+  font-size: 12px;
   font-weight: 600;
   font-family: "Poppins", sans-serif;
-  background: #beebff;
-  color: #3fa8e0;
+  background: #ffffff;
+  color: #4a9fe0;
   white-space: nowrap;
+  /* Product categories are saved in Firestore as plain lowercase words
+     (e.g. "mobility"), so capitalize just the first letter here instead
+     of changing the stored data. */
+  text-transform: capitalize;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .shop-category-pill.active {
-  background: #67c8f7;
+  background: #3fa8e0;
+  border-color: #3fa8e0;
   color: #ffffff;
+  box-shadow: 0 3px 8px rgba(63, 168, 224, 0.3);
+}
+
+.shop-section-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 20px;
+  margin: 0 0 16px;
 }
 
 .shop-section-title {
   font-weight: 700;
   font-size: 14px;
   color: #1e293b;
-  margin: 0 0 16px;
-  padding: 0 20px;
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+}
+
+.shop-result-count {
+  font-size: 11.5px;
+  color: #94a3b8;
   font-family: "Poppins", sans-serif;
 }
 
@@ -162,53 +211,4 @@
   grid-template-columns: 1fr 1fr;
   gap: 13px;
   padding: 0 20px 32px;
-}
-
-.shop-card {
-  border: none;
-  border-radius: 22px;
-  padding: 12px;
-  font-family: "Poppins", sans-serif;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(63, 168, 224, 0.1);
-}
-
-.shop-card-image-wrap {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 16px;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-
-.shop-card-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.shop-card-info-pill {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 9px 12px;
-}
-
-.shop-card-name {
-  font-weight: 600;
-  font-size: 12.5px;
-  color: #1e293b;
-  margin: 0 0 4px;
-  line-height: 1.35;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.shop-card-price {
-  font-weight: 700;
-  font-size: 13.5px;
-  color: #3fa8e0;
-  margin: 0;
 }

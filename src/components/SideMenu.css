@@ -1,0 +1,114 @@
+.side-menu {
+  --width: 260px;
+  /* The app follows the system light/dark setting, which is correct
+     everywhere else, but this menu's design is fixed light/blue — so
+     these override Ionic's own color variables just inside the menu,
+     regardless of the device's dark mode setting. Without this, items
+     below fell back to Ionic's default dark palette (black background,
+     dim text) since only some backgrounds were set explicitly. */
+  --ion-background-color: #ffffff;
+  --ion-text-color: #1e293b;
+  --ion-item-background: #ffffff;
+  --ion-toolbar-background: #f2f9ff;
+}
+
+.side-menu-toolbar {
+  --background: #f2f9ff;
+  --border-width: 0;
+  padding-top: env(safe-area-inset-top);
+}
+
+.side-menu-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  font-family: "Poppins", sans-serif;
+}
+
+.side-menu-logo {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.side-menu-appname {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1e293b;
+}
+
+.side-menu-content {
+  --background: #ffffff;
+}
+
+.side-menu-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #eef4f8;
+  margin-bottom: 8px;
+  font-family: "Poppins", sans-serif;
+}
+
+.side-menu-avatar-img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.side-menu-avatar-initials {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #67c8f7;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.side-menu-user-name {
+  font-weight: 600;
+  font-size: 13.5px;
+  color: #1e293b;
+}
+
+.side-menu-list {
+  padding: 0 8px;
+}
+
+.side-menu-item {
+  --padding-start: 12px;
+  --background: #ffffff;
+  --color: #1e293b;
+  font-family: "Poppins", sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #1e293b;
+  border-radius: 12px;
+  --background-hover: #f2f9ff;
+}
+
+.side-menu-item ion-icon {
+  color: #4a9fe0;
+  font-size: 19px;
+}
+
+.side-menu-divider {
+  height: 1px;
+  background: #eef4f8;
+  margin: 8px 12px;
+}
+
+.side-menu-logout {
+  --color: #e0475f;
+}
+
+.side-menu-logout ion-icon {
+  color: #e0475f;
+}

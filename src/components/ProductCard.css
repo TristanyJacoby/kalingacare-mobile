@@ -1,0 +1,126 @@
+.pcard {
+  position: relative;
+  background: #ffffff;
+  border-radius: 18px;
+  overflow: hidden;
+  font-family: "Poppins", sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(63, 168, 224, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.pcard-fav-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+}
+
+.pcard-fav-btn.active {
+  color: #e0475f;
+}
+
+.pcard-fav-btn:disabled {
+  opacity: 0.6;
+}
+
+.pcard-image-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #f4f8fb;
+  overflow: hidden;
+}
+
+.pcard-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pcard-body {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.pcard-badge {
+  align-self: flex-start;
+  background: #67c8f7;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: capitalize;
+  border-radius: 999px;
+  padding: 4px 10px;
+  margin-bottom: 6px;
+}
+
+.pcard-name {
+  font-weight: 600;
+  font-size: 12.5px;
+  color: #1e293b;
+  margin: 0 0 2px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pcard-subcategory {
+  font-size: 10.5px;
+  color: #94a3b8;
+  margin: 0 0 6px;
+}
+
+.pcard-price {
+  font-weight: 700;
+  font-size: 14px;
+  color: #2678b0;
+  margin: 0;
+}
+
+.pcard-price-php {
+  font-size: 10.5px;
+  color: #94a3b8;
+  text-decoration: line-through;
+  margin: 1px 0 8px;
+}
+
+.pcard-price:last-of-type {
+  margin-bottom: 8px;
+}
+
+.pcard-add-btn {
+  margin-top: auto;
+  width: 100%;
+  height: 34px;
+  border: none;
+  border-radius: 999px;
+  background: #67c8f7;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 11.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: "Poppins", sans-serif;
+}
+
+.pcard-add-btn:disabled {
+  opacity: 0.6;
+}

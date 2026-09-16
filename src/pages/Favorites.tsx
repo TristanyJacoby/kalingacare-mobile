@@ -1,96 +1,86 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IonPage, IonContent, IonIcon, IonSpinner } from "@ionic/react";
-import { arrowBackOutline, heart } from "ionicons/icons";
-import { doc, getDoc, updateDoc, arrayRemove } from "firebase/firestore";
+import { arrowBackOutline } from "ionicons/icons";
+import { doc, getDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
-import { getCategoryColor } from "../utils/categoryColor";
+import { getRates, type RatesResult } from "../utils/currency";
+import ProductCard, { type CardProduct } from "../components/ProductCard";
 import "./Favorites.css";
-
-// Same "shape" of product data used in ProductDetail.tsx — keeping it
-// consistent so both files expect the same fields from Firestore.
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  img?: string;
-  imgBase64?: string;
-}
-
-// Turns a number into peso text, e.g. 1500 -> "₱1,500"
-function peso(amount: number) {
-  return "₱" + amount.toLocaleString("en-PH");
-}
-
-// Gray placeholder box, shown only if a product has no photo saved.
-function placeholderImg() {
-  return (
-    "data:image/svg+xml;utf8," +
-    encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="373" height="230"><rect width="373" height="230" fill="#f1f5f9"/><text x="186" y="119" font-size="13" fill="#94a3b8" text-anchor="middle" font-family="sans-serif">No image</text></svg>`,
-    )
-  );
-}
 
 const Favorites: React.FC = () => {
   const navigate = useNavigate();
 
   // The favorited products we'll show. Starts empty while we load.
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<CardProduct[]>([]);
   // True while we're still fetching data — shows a spinner during this time.
   const [loading, setLoading] = useState(true);
 
+  // Same display-currency conversion used on Home and Products, so a
+  // product's price looks the same no matter which screen it's on.
+  const [displayCurrency, setDisplayCurrency] = useState("PHP");
+  const [rates, setRates] = useState<RatesResult | null>(null);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+
   useEffect(() => {
-    const user = auth.currentUser;
+    getRates().then(setRates);
+  }, []);
 
-    // No one logged in? Nothing to load — just stop the spinner.
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      // No one logged in? Nothing to load — just stop the spinner.
+      if (!user) {
+        setProducts([]);
+        setFavoriteIds(new Set());
+        setLoading(false);
+        return;
+      }
 
-    (async () => {
       // Step 1: read the user's profile to get their list of favorited
-      // product IDs (this is the same "favorites" array ProductDetail.tsx
+      // product IDs (this is the same "favorites" array ProductCard
       // writes to when you tap the heart button).
       const userSnap = await getDoc(doc(db, "users", user.uid));
-      const favoriteIds: string[] = userSnap.exists()
-        ? userSnap.data().favorites || []
-        : [];
+      const data = userSnap.exists() ? (userSnap.data() as any) : {};
+      if (data.currency) setDisplayCurrency(data.currency);
+      const ids: string[] = data.favorites || [];
+      setFavoriteIds(new Set(ids));
 
       // Step 2: fetch the actual product info for each favorited ID.
       // Promise.all fetches them all at once instead of one at a time,
       // so the screen loads faster.
       const productDocs = await Promise.all(
-        favoriteIds.map((id) => getDoc(doc(db, "products", id))),
+        ids.map((id) => getDoc(doc(db, "products", id))),
       );
 
       // Step 3: keep only products that still exist — a product might have
       // been deleted from the catalog after someone favorited it.
-      const loaded: Product[] = productDocs
+      const loaded: CardProduct[] = productDocs
         .filter((snap) => snap.exists())
         .map((snap) => ({
           id: snap.id,
-          ...(snap.data() as Omit<Product, "id">),
+          ...(snap.data() as Omit<CardProduct, "id">),
         }));
 
       setProducts(loaded);
       setLoading(false);
-    })();
+    });
+    return () => unsubscribe();
   }, []);
 
-  // Un-favorites a product: updates Firestore, then removes it from the
-  // screen right away without needing to reload the whole page.
-  const handleRemove = async (productId: string) => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    await updateDoc(doc(db, "users", user.uid), {
-      favorites: arrayRemove(productId),
+  // Keeps favoriteIds in sync, same as every other page that shows this
+  // card. On this page specifically, un-hearting a product should also
+  // drop it from view right away since it's the whole point of the list.
+  const handleFavoriteChange = (id: string, isFavorited: boolean) => {
+    setFavoriteIds((prev) => {
+      const next = new Set(prev);
+      if (isFavorited) next.add(id);
+      else next.delete(id);
+      return next;
     });
-
-    setProducts((prev) => prev.filter((p) => p.id !== productId));
+    if (!isFavorited) {
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+    }
   };
 
   return (
@@ -123,36 +113,15 @@ const Favorites: React.FC = () => {
         ) : (
           <div className="fav-grid">
             {products.map((product) => (
-              <div
-                className="fav-card"
+              <ProductCard
                 key={product.id}
-                style={{ background: getCategoryColor(product.category) }}
-              >
-                <div
-                  className="fav-image-wrap"
-                  onClick={() => navigate(`/product/${product.id}`)}
-                >
-                  <img
-                    src={product.imgBase64 || product.img || placeholderImg()}
-                    alt={product.name}
-                    className="fav-image"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = placeholderImg();
-                    }}
-                  />
-                </div>
-                <div className="fav-info-pill">
-                  <p className="fav-name">{product.name}</p>
-                  <p className="fav-price">{peso(product.price)}</p>
-                  <button
-                    className="fav-remove-btn"
-                    onClick={() => handleRemove(product.id)}
-                    aria-label="Remove from favorites"
-                  >
-                    <IonIcon icon={heart} />
-                  </button>
-                </div>
-              </div>
+                product={product}
+                onOpen={(id) => navigate(`/product/${id}`)}
+                displayCurrency={displayCurrency}
+                rates={rates}
+                favoriteIds={favoriteIds}
+                onFavoriteChange={handleFavoriteChange}
+              />
             ))}
           </div>
         )}

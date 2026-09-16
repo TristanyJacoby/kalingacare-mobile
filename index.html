@@ -6,7 +6,10 @@
 
     <base href="/" />
 
-    <meta name="color-scheme" content="light dark" />
+    <!-- "light" only, on purpose: this stops the device's own dark mode
+         setting from changing things like input fields and scrollbars.
+         Every screen here is custom-styled for light mode only. -->
+    <meta name="color-scheme" content="light" />
     <meta
       name="viewport"
       content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"

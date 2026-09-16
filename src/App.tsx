@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Navigate, Route } from 'react-router-dom';
 import { IonApp, IonRouterOutlet, IonTabs, IonTabBar, IonTabButton, IonIcon, setupIonicReact } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { home, gridOutline, cart, person } from 'ionicons/icons';
 import { CartProvider } from './context/CartContext';
+import SideMenu from './components/SideMenu';
+import SplashScreen from './components/SplashScreen';
 
 import Home from './pages/Home';
 import Products from './pages/Products';
@@ -19,6 +21,8 @@ import SavedAddresses from './pages/SavedAddresses';
 import HelpSupport from './pages/HelpSupport';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ComingSoon from './pages/ComingSoon';
+import AboutKalingaCare from './pages/AboutKalingaCare';
 //TBC
 import Favorites from './pages/Favorites';
 import WriteReview from './pages/WriteReview';
@@ -44,11 +48,18 @@ import '@ionic/react/css/display.css';
  * -----------------------------------------------------
  * For more info, please see:
  * https://ionicframework.com/docs/theming/dark-mode
+ *
+ * Turned off: every screen in this app is custom-styled with fixed
+ * light colors (blue/white theme), none of it was built to also look
+ * right in dark mode. With this on, any gap not covered by a custom
+ * style fell through to Ionic's dark system background instead of
+ * this app's own light one — that's what caused the black patches
+ * around the floating tab bar and (previously) inside the side menu.
  */
 
 /* import '@ionic/react/css/palettes/dark.always.css'; */
 /* import '@ionic/react/css/palettes/dark.class.css'; */
-import '@ionic/react/css/palettes/dark.system.css';
+/* import '@ionic/react/css/palettes/dark.system.css'; */
 
 /* Theme variables */
 import './theme/variables.css';
@@ -58,12 +69,24 @@ import './theme/tabbar.css';
 
 setupIonicReact();
 
-const App: React.FC = () => (
-  <IonApp>
-    <CartProvider>
+const App: React.FC = () => {
+  const [showSplash, setShowSplash] = useState(true);
+
+  if (showSplash) {
+    return (
+      <IonApp>
+        <SplashScreen onFinish={() => setShowSplash(false)} />
+      </IonApp>
+    );
+  }
+
+  return (
+    <IonApp>
+      <CartProvider>
       <IonReactRouter>
+        <SideMenu />
         <IonTabs>
-          <IonRouterOutlet>
+          <IonRouterOutlet id="main-content">
             <Route path="/home" element={<Home />} />
             <Route path="/products" element={<Products />} />
             <Route path="/product/:id" element={<ProductDetail />} />
@@ -81,6 +104,8 @@ const App: React.FC = () => (
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/review/:orderId/:productId" element={<WriteReview />} />
+            <Route path="/about" element={<AboutKalingaCare />} />
+            <Route path="/more/:section" element={<ComingSoon />} />
           </IonRouterOutlet>
 
           {/* Icon-only floating pill nav — labels removed for the new design;
@@ -101,8 +126,9 @@ const App: React.FC = () => (
           </IonTabBar>
         </IonTabs>
       </IonReactRouter>
-    </CartProvider>
-  </IonApp>
-);
+      </CartProvider>
+    </IonApp>
+  );
+};
 
 export default App;

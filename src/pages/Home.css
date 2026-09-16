@@ -31,6 +31,7 @@
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
+  scroll-padding-left: 20px;
   scrollbar-width: none;
   padding: 0 20px;
   gap: 12px;
@@ -42,7 +43,9 @@
 
 .home-banner {
   flex: 0 0 100%;
+  flex-shrink: 0;
   scroll-snap-align: start;
+  scroll-snap-stop: always;
   padding: 30px 26px;
   min-height: 190px;
   border-radius: 28px;
@@ -146,4 +149,127 @@
   font-weight: 700;
   font-size: 13.5px;
   font-family: "Poppins", sans-serif;
+}
+
+/* How It Works + Customer Reviews sections */
+.home-section {
+  padding: 8px 20px 32px;
+  font-family: "Poppins", sans-serif;
+}
+
+.home-section-badge {
+  display: inline-block;
+  background: #d7ecfb;
+  color: #2563a8;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+
+.home-section-title {
+  font-weight: 700;
+  font-size: 19px;
+  color: #1e293b;
+  margin: 0 0 6px;
+}
+
+.home-section-subtitle {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0 0 18px;
+}
+
+.home-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-step-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 4px 14px rgba(63, 168, 224, 0.1);
+}
+
+.home-step-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  background: #3fa8e0;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.home-step-title {
+  font-weight: 700;
+  font-size: 14.5px;
+  color: #1e293b;
+  margin: 0 0 6px;
+}
+
+.home-step-desc {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #64748b;
+  margin: 0;
+}
+
+.home-review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.home-review-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 4px 14px rgba(63, 168, 224, 0.1);
+}
+
+.home-review-stars {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.home-review-star {
+  color: #f5a623;
+  font-size: 14px;
+}
+
+.home-review-quote {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #334155;
+  margin: 0 0 14px;
+}
+
+.home-review-name {
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #1e293b;
+  margin: 0 0 2px;
+}
+
+.home-review-location {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.home-review-disclaimer {
+  font-size: 11px;
+  font-style: italic;
+  color: #94a3b8;
+  text-align: center;
+  margin: 4px 0 0;
 }

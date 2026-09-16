@@ -1,54 +1,65 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { IonContent, IonPage, IonIcon, IonSpinner } from "@ionic/react";
-import { searchOutline, notificationsOutline, cartOutline } from "ionicons/icons";
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
-import { db } from "../firebase";
+import { IonContent, IonPage, IonIcon, IonSpinner, IonMenuButton } from "@ionic/react";
+import { searchOutline, notificationsOutline, cartOutline, menuOutline } from "ionicons/icons";
+import { collection, query, orderBy, onSnapshot, doc, getDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "../firebase";
 import { useCart } from "../context/CartContext";
-import { getCategoryColor } from "../utils/categoryColor";
+import { getRates, type RatesResult } from "../utils/currency";
+import ProductCard, { type CardProduct } from "../components/ProductCard";
 import logo from "../assets/kalingacare-logo.png";
 import "./Shop.css";
-
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  subcategory?: string;
-  price: number;
-  stock?: number;
-  img?: string;
-  imgBase64?: string;
-}
-
-function peso(amount: number) {
-  return "₱" + amount.toLocaleString("en-PH");
-}
-
-function placeholderImg() {
-  return (
-    "data:image/svg+xml;utf8," +
-    encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="136" height="136"><rect width="136" height="136" fill="#f1f5f9"/><text x="68" y="72" font-size="11" fill="#94a3b8" text-anchor="middle" font-family="sans-serif">No image</text></svg>`,
-    )
-  );
-}
 
 const Products: React.FC = () => {
   const navigate = useNavigate();
   const { totalItems } = useCart();
   const [searchParams] = useSearchParams();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<CardProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState(searchParams.get("q") ?? "");
   const [activeCategory, setActiveCategory] = useState<string>(searchParams.get("category") ?? "All");
+
+  // Display-only currency conversion, same as Checkout — see
+  // src/utils/currency.ts.
+  const [displayCurrency, setDisplayCurrency] = useState("PHP");
+  const [rates, setRates] = useState<RatesResult | null>(null);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    getRates().then(setRates);
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setFavoriteIds(new Set());
+        return;
+      }
+      const snap = await getDoc(doc(db, "users", user.uid));
+      const data = snap.exists() ? (snap.data() as any) : {};
+      if (data.currency) setDisplayCurrency(data.currency);
+      setFavoriteIds(new Set(data.favorites || []));
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleFavoriteChange = (id: string, isFavorited: boolean) => {
+    setFavoriteIds((prev) => {
+      const next = new Set(prev);
+      if (isFavorited) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
 
   useEffect(() => {
     // Live subscription — same idea as the web app's products.js onSnapshot.
     const q = query(collection(db, "products"), orderBy("name"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const list: Product[] = snapshot.docs.map((doc) => ({
+      const list: CardProduct[] = snapshot.docs.map((doc) => ({
         id: doc.id,
-        ...(doc.data() as Omit<Product, "id">),
+        ...(doc.data() as Omit<CardProduct, "id">),
       }));
       setProducts(list);
       setLoading(false);
@@ -86,6 +97,9 @@ const Products: React.FC = () => {
     <IonPage>
       <IonContent fullscreen className="shop-content">
         <div className="shop-header">
+          <IonMenuButton className="shop-menu-btn" aria-label="Menu">
+            <IonIcon icon={menuOutline} />
+          </IonMenuButton>
           <img src={logo} alt="KalingaCare" className="shop-logo" />
           <span className="shop-appname">KalingaCare</span>
           <div className="shop-header-icons">
@@ -111,20 +125,25 @@ const Products: React.FC = () => {
         </div>
 
         {categories.length > 1 && (
-          <div className="shop-categories">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                className={`shop-category-pill ${activeCategory === cat ? "active" : ""}`}
-                onClick={() => setActiveCategory(cat)}
-              >
-                {cat}
-              </button>
-            ))}
+          <div className="shop-filter-bar">
+            <div className="shop-categories">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  className={`shop-category-pill ${activeCategory === cat ? "active" : ""}`}
+                  onClick={() => setActiveCategory(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
-        <h3 className="shop-section-title">{sectionTitle}</h3>
+        <div className="shop-section-title-row">
+          <h3 className="shop-section-title">{sectionTitle}</h3>
+          <span className="shop-result-count">{visibleProducts.length} items</span>
+        </div>
 
         {loading && (
           <div className="shop-loading">
@@ -138,27 +157,15 @@ const Products: React.FC = () => {
 
         <div className="shop-grid">
           {visibleProducts.map((product) => (
-            <div
-              className="shop-card"
+            <ProductCard
               key={product.id}
-              style={{ background: getCategoryColor(product.category) }}
-              onClick={() => navigate(`/product/${product.id}`)}
-            >
-              <div className="shop-card-image-wrap">
-                <img
-                  src={product.imgBase64 || product.img || placeholderImg()}
-                  alt={product.name}
-                  className="shop-card-image"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = placeholderImg();
-                  }}
-                />
-              </div>
-              <div className="shop-card-info-pill">
-                <p className="shop-card-name">{product.name}</p>
-                <p className="shop-card-price">{peso(product.price)}</p>
-              </div>
-            </div>
+              product={product}
+              onOpen={(id) => navigate(`/product/${id}`)}
+              displayCurrency={displayCurrency}
+              rates={rates}
+              favoriteIds={favoriteIds}
+              onFavoriteChange={handleFavoriteChange}
+            />
           ))}
         </div>
       </IonContent>
