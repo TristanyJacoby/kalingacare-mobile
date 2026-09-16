@@ -187,3 +187,27 @@
 .orders-cancel-btn:disabled {
   opacity: 0.6;
 }
+
+.orders-track-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px;
+  background: #e2f2fb;
+  color: #2678b0;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.orders-tracking-panel {
+  margin-top: 10px;
+  padding: 10px 8px;
+  background: #f8fbfd;
+  border-radius: 12px;
+  border: 1px solid #e2eef5;
+}

@@ -1,0 +1,72 @@
+.tracker-steps {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px 4px 6px;
+}
+
+.tracker-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  text-align: center;
+}
+
+.tracker-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 15px;
+  left: 55%;
+  right: -45%;
+  height: 2px;
+  background: #dbe9f5;
+}
+
+.tracker-step.done:not(:last-child)::after {
+  background: #4a9fe0;
+}
+
+.tracker-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #eef4f8;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  z-index: 1;
+  margin-bottom: 6px;
+}
+
+.tracker-step.done .tracker-dot {
+  background: #4a9fe0;
+  color: #ffffff;
+}
+
+.tracker-step.current .tracker-dot {
+  box-shadow: 0 0 0 3px rgba(74, 159, 224, 0.25);
+}
+
+.tracker-label {
+  font-size: 10.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.tracker-step.done .tracker-label {
+  color: #1e293b;
+}
+
+.tracker-cancelled {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 4px;
+  font-size: 12.5px;
+  color: #e0475f;
+  font-weight: 500;
+}

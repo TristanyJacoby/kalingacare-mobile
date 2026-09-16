@@ -5,6 +5,7 @@ import { mailOutline, lockClosedOutline } from "ionicons/icons";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import { friendlyAuthError } from "../utils/authErrors";
+import { signInWithGoogle } from "../utils/googleSignIn";
 import logo from "../assets/kalingacare-logo.png";
 import "./Auth.css";
 
@@ -14,6 +15,7 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -36,6 +38,25 @@ const Login: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      navigate("/home");
+    } catch (err: any) {
+      // User backing out of the account picker isn't a real error.
+      if (err?.code !== "auth/popup-closed-by-user" && err?.message !== "canceled") {
+        presentToast({
+          message: "Couldn't sign in with Google. Please try again.",
+          duration: 2500,
+          color: "danger",
+        });
+      }
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -97,12 +118,15 @@ const Login: React.FC = () => {
             <span className="auth-divider-line" />
           </div>
 
-          {/* Google Sign-In needs a Capacitor-native auth plugin (Firebase JS SDK popup/redirect
-              flows don't work reliably inside a Capacitor WebView). Left disabled/visual-only
-              until that's wired up separately. */}
-          <button className="auth-google-btn" disabled>
+          {/* Native Google Sign-In — needs one-time Android setup before it
+              works on a device, see src/utils/googleSignIn.ts. */}
+          <button
+            className="auth-google-btn"
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading}
+          >
             <span className="auth-google-g">G</span>
-            Continue with Google
+            {googleLoading ? "Connecting…" : "Continue with Google"}
           </button>
 
           <p className="auth-switch-text">

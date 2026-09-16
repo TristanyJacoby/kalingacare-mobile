@@ -12,6 +12,12 @@ import {
 import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { useCart } from '../context/CartContext';
+import {
+  getRates,
+  convertAndFormat,
+  getOrderedCurrencyCodes,
+  type RatesResult,
+} from '../utils/currency';
 import './Auth.css';
 import './Cart.css';
 import './Checkout.css';
@@ -42,6 +48,15 @@ const Checkout: React.FC = () => {
   });
   const [placing, setPlacing] = useState(false);
 
+  // Display-only currency conversion — the real charge is always PHP
+  // (Cash on Delivery). See src/utils/currency.ts.
+  const [displayCurrency, setDisplayCurrency] = useState('PHP');
+  const [rates, setRates] = useState<RatesResult | null>(null);
+
+  useEffect(() => {
+    getRates().then(setRates);
+  }, []);
+
   useEffect(() => {
     const user = auth.currentUser;
     if (!user) {
@@ -66,6 +81,10 @@ const Checkout: React.FC = () => {
         return;
       }
 
+      if (data?.currency) {
+        setDisplayCurrency(data.currency);
+      }
+
       const addressList = data?.savedAddresses;
       const defaultAddress = addressList?.find((a: any) => a.isDefault) || addressList?.[0];
 
@@ -73,6 +92,10 @@ const Checkout: React.FC = () => {
         setRecipientName(defaultAddress.recipient || '');
         setAddress(defaultAddress.address || '');
         setContactNumber(defaultAddress.phone || '');
+        setSavedCoords({
+          lat: defaultAddress.lat ?? null,
+          lng: defaultAddress.lng ?? null,
+        });
       } else if (data?.savedAddress) {
         const legacy = data.savedAddress;
         setRecipientName(legacy.recipient || '');
@@ -122,6 +145,10 @@ const Checkout: React.FC = () => {
           lat: savedCoords.lat,
           lng: savedCoords.lng,
         },
+        // What currency the buyer was viewing at order time — display
+        // only, not a real multi-currency charge. The real total above
+        // is always PHP.
+        displayCurrency,
         createdAt: serverTimestamp(),
       });
 
@@ -294,6 +321,36 @@ const Checkout: React.FC = () => {
             <span className="cart-summary-value cart-summary-total-value">
               {peso(selectedSubtotal + SHIPPING_FEE - discountAmount)}
             </span>
+          </div>
+
+          {/* Display-only conversion. The order is always charged in PHP —
+              this just helps an OFW abroad see roughly what they're
+              spending in their own currency. */}
+          <div className="checkout-currency-row">
+            <select
+              className="checkout-currency-select"
+              value={displayCurrency}
+              onChange={(e) => setDisplayCurrency(e.target.value)}
+            >
+              {getOrderedCurrencyCodes().map((code) => (
+                <option key={code} value={code}>
+                  Show total in {code}
+                </option>
+              ))}
+            </select>
+            {displayCurrency !== 'PHP' && rates && (
+              <p className="checkout-currency-note">
+                ≈{' '}
+                {convertAndFormat(
+                  selectedSubtotal + SHIPPING_FEE - discountAmount,
+                  displayCurrency,
+                  rates.rates,
+                )}{' '}
+                {rates.liveCodes.includes(displayCurrency)
+                  ? '(live rate)'
+                  : '(estimated rate — live data isn\'t available for this currency)'}
+              </p>
+            )}
           </div>
         </div>
       </IonContent>

@@ -150,3 +150,9 @@
   font-weight: 600;
   margin-top: 12px;
 }
+
+.addr-map-hint {
+  font-size: 11.5px;
+  color: #64748b;
+  margin: -4px 0 6px;
+}

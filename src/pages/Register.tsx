@@ -6,6 +6,8 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { friendlyAuthError } from "../utils/authErrors";
+import { COUNTRY_CURRENCY, getOrderedCountries } from "../utils/currency";
+import { signInWithGoogle } from "../utils/googleSignIn";
 import logo from "../assets/kalingacare-logo.png";
 import "./Auth.css";
 
@@ -16,7 +18,12 @@ const Register: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  // Country drives the buyer's default display currency at checkout —
+  // see src/utils/currency.ts. Defaults to the first entry in the
+  // ordered list so the select never starts blank.
+  const [country, setCountry] = useState(getOrderedCountries()[0]);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleSignUp = async () => {
     if (!fullName || !email || !password || !confirmPassword) {
@@ -48,6 +55,8 @@ const Register: React.FC = () => {
         fullName,
         email,
         role: "user",
+        country,
+        currency: COUNTRY_CURRENCY[country] || "PHP",
         createdAt: serverTimestamp(),
       });
 
@@ -60,6 +69,24 @@ const Register: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      navigate("/home");
+    } catch (err: any) {
+      if (err?.code !== "auth/popup-closed-by-user" && err?.message !== "canceled") {
+        presentToast({
+          message: "Couldn't sign in with Google. Please try again.",
+          duration: 2500,
+          color: "danger",
+        });
+      }
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -127,6 +154,21 @@ const Register: React.FC = () => {
             />
           </div>
 
+          <label className="auth-label">Country You're Working In</label>
+          <div className="auth-input-wrap">
+            <select
+              className="auth-input"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+            >
+              {getOrderedCountries().map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <button
             className="auth-primary-btn"
             style={{ marginTop: 4 }}
@@ -142,10 +184,15 @@ const Register: React.FC = () => {
             <span className="auth-divider-line" />
           </div>
 
-          {/* Same Capacitor caveat as Login — see comment there. */}
-          <button className="auth-google-btn" disabled>
+          {/* Native Google Sign-In — needs one-time Android setup before it
+              works on a device, see src/utils/googleSignIn.ts. */}
+          <button
+            className="auth-google-btn"
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading}
+          >
             <span className="auth-google-g">G</span>
-            Continue with Google
+            {googleLoading ? "Connecting…" : "Continue with Google"}
           </button>
 
           <p className="auth-switch-text">

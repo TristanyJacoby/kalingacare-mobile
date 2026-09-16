@@ -7,7 +7,7 @@ import {
   IonSpinner,
   useIonToast,
 } from "@ionic/react";
-import { arrowBackOutline } from "ionicons/icons";
+import { arrowBackOutline, carOutline, chevronUpOutline } from "ionicons/icons";
 import {
   collection,
   query,
@@ -17,6 +17,8 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import OrderTrackingStepper from "../components/OrderTrackingStepper";
+import TrackingMap from "../components/TrackingMap";
 import "./MyOrders.css";
 
 interface OrderItem {
@@ -35,6 +37,7 @@ interface Order {
   total: number;
   status: string;
   createdAt?: { toDate: () => Date };
+  shippingInfo?: { lat?: number | null; lng?: number | null };
 }
 
 // Same color-badge pattern already used for role badges in Profile.tsx —
@@ -79,6 +82,17 @@ const MyOrders: React.FC = () => {
   // Firestore's reviews rule doesn't allow editing/deleting one once
   // created (so preventing a duplicate submission has to happen here).
   const [reviewedKeys, setReviewedKeys] = useState<Set<string>>(new Set());
+  // Which order cards currently have their tracking panel open.
+  const [trackingOpenIds, setTrackingOpenIds] = useState<Set<string>>(new Set());
+
+  const toggleTracking = (orderId: string) => {
+    setTrackingOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(orderId)) next.delete(orderId);
+      else next.add(orderId);
+      return next;
+    });
+  };
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -265,6 +279,35 @@ const MyOrders: React.FC = () => {
                     >
                       {isCancelling ? "Cancelling…" : "Cancel Order"}
                     </button>
+                  )}
+
+                  {displayStatus !== "Cancelled" && (
+                    <>
+                      <button
+                        className="orders-track-btn"
+                        onClick={() => toggleTracking(order.id)}
+                      >
+                        <IonIcon
+                          icon={
+                            trackingOpenIds.has(order.id)
+                              ? chevronUpOutline
+                              : carOutline
+                          }
+                        />{" "}
+                        {trackingOpenIds.has(order.id)
+                          ? "Hide Tracking"
+                          : "Track Order"}
+                      </button>
+                      {trackingOpenIds.has(order.id) && (
+                        <div className="orders-tracking-panel">
+                          <OrderTrackingStepper status={order.status} />
+                          <TrackingMap
+                            destLat={order.shippingInfo?.lat}
+                            destLng={order.shippingInfo?.lng}
+                          />
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               );

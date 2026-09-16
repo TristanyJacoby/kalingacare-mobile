@@ -12,9 +12,10 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
 } from "firebase/auth";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { friendlyAuthError } from "../utils/authErrors";
+import { COUNTRY_CURRENCY, getOrderedCountries } from "../utils/currency";
 import "./Auth.css";
 import "./MyAccount.css";
 
@@ -25,6 +26,11 @@ const MyAccount: React.FC = () => {
   // --- Name section ---
   const [fullName, setFullName] = useState("");
   const [savingName, setSavingName] = useState(false);
+
+  // --- Country section (drives checkout's display currency, see
+  // src/utils/currency.ts) ---
+  const [country, setCountry] = useState("");
+  const [savingCountry, setSavingCountry] = useState(false);
 
   // --- Password section ---
   const [currentPassword, setCurrentPassword] = useState("");
@@ -39,7 +45,38 @@ const MyAccount: React.FC = () => {
       return;
     }
     setFullName(user.displayName || "");
+    (async () => {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      const data = snap.exists() ? snap.data() : {};
+      setCountry(data.country || getOrderedCountries()[0]);
+    })();
   }, [navigate]);
+
+  const handleSaveCountry = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    setSavingCountry(true);
+    try {
+      await updateDoc(doc(db, "users", user.uid), {
+        country,
+        currency: COUNTRY_CURRENCY[country] || "PHP",
+      });
+      presentToast({
+        message: "Country updated.",
+        duration: 2000,
+        color: "success",
+      });
+    } catch {
+      presentToast({
+        message: "Could not update country. Please try again.",
+        duration: 2500,
+        color: "danger",
+      });
+    } finally {
+      setSavingCountry(false);
+    }
+  };
 
   const handleSaveName = async () => {
     const user = auth.currentUser;
@@ -189,6 +226,35 @@ const MyAccount: React.FC = () => {
             disabled={savingName}
           >
             {savingName ? "Saving…" : "Save Name"}
+          </button>
+        </div>
+
+        <div className="acct-divider" />
+
+        <div className="acct-section">
+          <h3 className="acct-section-title">Country You're Working In</h3>
+          <p className="acct-section-hint">
+            Used to show order totals in your own currency at checkout.
+          </p>
+          <div className="auth-input-wrap">
+            <select
+              className="auth-input"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+            >
+              {getOrderedCountries().map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            className="acct-save-btn"
+            onClick={handleSaveCountry}
+            disabled={savingCountry}
+          >
+            {savingCountry ? "Saving…" : "Save Country"}
           </button>
         </div>
 

@@ -20,6 +20,7 @@ import {
 } from "ionicons/icons";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import AddressMapPicker from "../components/AddressMapPicker";
 import "./Auth.css";
 import "./SavedAddresses.css";
 
@@ -33,6 +34,8 @@ interface Address {
   address: string;
   phone: string;
   isDefault: boolean;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 // Quick way to make a random-enough ID without needing an extra library.
@@ -57,6 +60,8 @@ const SavedAddresses: React.FC = () => {
   const [recipient, setRecipient] = useState("");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -114,6 +119,8 @@ const SavedAddresses: React.FC = () => {
     setRecipient("");
     setAddress("");
     setPhone("");
+    setLat(null);
+    setLng(null);
     setEditingId(null);
   };
 
@@ -127,6 +134,8 @@ const SavedAddresses: React.FC = () => {
     setRecipient(item.recipient);
     setAddress(item.address);
     setPhone(item.phone);
+    setLat(item.lat ?? null);
+    setLng(item.lng ?? null);
     setEditingId(item.id);
     setMode("form");
   };
@@ -149,7 +158,7 @@ const SavedAddresses: React.FC = () => {
         // Editing an existing one — replace just that entry, keep the rest.
         updated = addresses.map((a) =>
           a.id === editingId
-            ? { ...a, label: label || "Address", recipient, address, phone }
+            ? { ...a, label: label || "Address", recipient, address, phone, lat, lng }
             : a,
         );
       } else {
@@ -162,6 +171,8 @@ const SavedAddresses: React.FC = () => {
           recipient,
           address,
           phone,
+          lat,
+          lng,
           isDefault: addresses.length === 0,
         };
         updated = [...addresses, newAddress];
@@ -319,6 +330,18 @@ const SavedAddresses: React.FC = () => {
             </div>
 
             <label className="auth-label">Delivery Address</label>
+            <p className="addr-map-hint">
+              Drag the pin or search below to set the exact location.
+            </p>
+            <AddressMapPicker
+              savedLat={lat}
+              savedLng={lng}
+              onLocationChange={({ address: foundAddress, lat: foundLat, lng: foundLng }) => {
+                setLat(foundLat);
+                setLng(foundLng);
+                if (foundAddress) setAddress(foundAddress);
+              }}
+            />
             <div className="auth-input-wrap">
               <IonIcon icon={locationOutline} className="auth-input-icon" />
               <input
