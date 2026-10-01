@@ -1,15 +1,15 @@
 // src/utils/googleMaps.ts
 // KalingaCare — Google Maps loader, ported from the web app's js/site.js.
-// Reuses the same API key already public in the web repo (Google Maps
-// keys are meant to be restricted by referrer/app, not kept secret, the
+// Maps keys are meant to be restricted by referrer, not kept secret, the
 // same way the Firebase key is public — see the note on GOOGLE_MAPS_API_KEY
-// below).
+// below.
 
-// IMPORTANT: this is the same key already committed in the web project's
-// js/site.js. If you rotate it there, update it here too. Restrict it in
-// Google Cloud Console under Application restrictions so only your web
-// domain and this app's package name can use it.
-export const GOOGLE_MAPS_API_KEY: string = "AIzaSyBBqPEJgekBOairKL01wi9ics8UilatFec";
+// Mobile-only key ("KalingaCare Mobile" in Google Cloud Console), separate
+// from the web key. It is restricted to the Capacitor WebView origin
+// (https://localhost/*) and to Maps JavaScript, Geocoding and Places (New),
+// so it is safe to ship in the bundle. Remove the http://localhost:5173/*
+// dev referrer in the Console before a release build.
+export const GOOGLE_MAPS_API_KEY: string = "AIzaSyC-F6dg1IbFOsZ4ye5sk6fWvNzKCxmEnIk";
 
 // Metro Manila — used as the default map center when there's no saved
 // pin yet (most deliveries are within the Philippines).
