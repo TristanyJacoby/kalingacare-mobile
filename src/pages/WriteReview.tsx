@@ -196,6 +196,7 @@ const WriteReview: React.FC = () => {
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={5}
+            maxLength={1000}
           />
         </div>
 

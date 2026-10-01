@@ -34,3 +34,11 @@ yarn-error.log*
 /ios
 /android
 .DS_Store
+
+# local AI assistant context
+CLAUDE.md
+
+# secrets / signing
+.env
+*.keystore
+*.jks
