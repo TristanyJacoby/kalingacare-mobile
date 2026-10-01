@@ -28,7 +28,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const ROLE_STYLES: Record<string, { bg: string; color: string }> = {
-  user: { bg: "#e2f2fb", color: "#3fa8e0" },
+  user: { bg: "#e2f2fb", color: "#1778ad" },
   staff: { bg: "#dcefe3", color: "#2f8f5b" },
   admin: { bg: "#e6dffb", color: "#6a3fd6" },
   superadmin: { bg: "#fff2cc", color: "#916f00" },
@@ -180,12 +180,16 @@ const Profile: React.FC = () => {
           <div className="profile-card-info">
             <p className="profile-name">{fullName || "—"}</p>
             <p className="profile-email">{email}</p>
-            <span
-              className="profile-role-badge"
-              style={{ background: roleStyle.bg, color: roleStyle.color }}
-            >
-              {ROLE_LABELS[role] || "User"}
-            </span>
+            {/* Customers don't need to see an internal "User" role; the badge
+                only shows for staff-level accounts. */}
+            {role !== "user" && (
+              <span
+                className="profile-role-badge"
+                style={{ background: roleStyle.bg, color: roleStyle.color }}
+              >
+                {ROLE_LABELS[role] || role}
+              </span>
+            )}
           </div>
         </div>
 

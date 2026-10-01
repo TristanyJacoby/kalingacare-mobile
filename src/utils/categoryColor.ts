@@ -1,4 +1,4 @@
-// Soft pastel palette matching the app's existing blue/pink gradient family.
+// Soft pastel palette in the app's soft blue family.
 // Categories are dynamic (pulled from real Firestore data), so colors are
 // assigned by hashing the category name to a palette index — this keeps the
 // same category always showing the same color without hardcoding specific

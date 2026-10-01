@@ -31,7 +31,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  background: linear-gradient(135deg, #7dd3fc 0%, #a5f3fc 45%, #f8b4d9 100%);
+  background: #67c8f7;
   box-shadow: 0 10px 24px rgba(103, 200, 247, 0.25);
   font-family: "Poppins", sans-serif;
 }
@@ -57,7 +57,7 @@
 .profile-avatar-initials {
   font-weight: 700;
   font-size: 15px;
-  color: #3fa8e0;
+  color: #1778ad;
 }
 
 .profile-card-info {
@@ -68,13 +68,13 @@
 
 .profile-name {
   font-weight: 700;
-  font-size: 14.5px;
+  font-size: 14px;
   color: #12283a;
   margin: 0;
 }
 
 .profile-email {
-  font-size: 11.5px;
+  font-size: 12px;
   color: #12283a;
   opacity: 0.8;
   margin: 0;
@@ -85,7 +85,7 @@
   border-radius: 999px;
   padding: 3px 10px;
   font-weight: 700;
-  font-size: 10.5px;
+  font-size: 12px;
   margin-top: 2px;
 }
 
@@ -114,14 +114,14 @@
 
 .profile-menu-icon {
   font-size: 16px;
-  color: #3fa8e0;
+  color: #1778ad;
   flex-shrink: 0;
 }
 
 .profile-menu-label {
   flex: 1;
   font-weight: 500;
-  font-size: 13.5px;
+  font-size: 13px;
   color: #1e293b;
 }
 
@@ -186,14 +186,14 @@
   right: -2px;
   width: 24px;
   height: 24px;
-  background: #3fa8e0;
+  background: #1778ad;
   border: 2px solid white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 12px;
+  font-size: 12.5px;
 }
 
 .profile-avatar-spinner {

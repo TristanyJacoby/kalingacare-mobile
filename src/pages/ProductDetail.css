@@ -28,9 +28,9 @@
   position: absolute;
   top: -2px;
   right: -2px;
-  background: #3fa8e0;
+  background: #1778ad;
   color: #fff;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   border-radius: 999px;
   min-width: 16px;
@@ -52,6 +52,7 @@
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   border-radius: 0 0 28px 28px;
+  background: #ffffff;
 }
 
 .pd-gallery::-webkit-scrollbar {
@@ -61,7 +62,7 @@
 .pd-gallery-slide {
   flex: 0 0 100%;
   scroll-snap-align: start;
-  height: 230px;
+  height: 260px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -89,12 +90,12 @@
 
 .pd-gallery-dot.active {
   width: 16px;
-  background: #3fa8e0;
+  background: #1778ad;
 }
 
 .pd-image {
-  max-width: 80%;
-  max-height: 80%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
@@ -105,10 +106,10 @@
 
 .pd-category {
   font-weight: 600;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.4px;
   text-transform: uppercase;
-  color: #3fa8e0;
+  color: #1778ad;
   margin: 0 0 6px;
 }
 
@@ -123,7 +124,7 @@
 .pd-price {
   font-weight: 700;
   font-size: 22px;
-  color: #3fa8e0;
+  color: #1778ad;
   margin: 0 0 4px;
 }
 
@@ -212,12 +213,12 @@
 .pd-add-btn {
   flex: 1;
   height: 51px;
-  background: #67c8f7;
+  background: #1778ad;
   color: #fff;
   border: none;
   border-radius: 999px;
   font-weight: 600;
-  font-size: 14.5px;
+  font-size: 14px;
   font-family: "Poppins", sans-serif;
   box-shadow: 0 8px 20px rgba(103, 200, 247, 0.4);
 }
@@ -246,7 +247,7 @@
 }
 
 .pd-rating-count {
-  font-size: 11.5px;
+  font-size: 12px;
   color: #64748b;
 }
 
@@ -290,7 +291,7 @@
 }
 
 .pd-review-text {
-  font-size: 12px;
+  font-size: 12.5px;
   color: #64748b;
   line-height: 1.5;
   margin: 0;
@@ -357,7 +358,7 @@
 
 .pd-related-name {
   font-weight: 600;
-  font-size: 11.5px;
+  font-size: 12px;
   color: #1e293b;
   margin: 0 0 4px;
   line-height: 1.3;
@@ -369,8 +370,8 @@
 
 .pd-related-price {
   font-weight: 700;
-  font-size: 12px;
-  color: #3fa8e0;
+  font-size: 12.5px;
+  color: #1778ad;
   margin: 0;
 }
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Navigate, Route } from 'react-router-dom';
-import { IonApp, IonRouterOutlet, IonTabs, IonTabBar, IonTabButton, IonIcon, setupIonicReact } from '@ionic/react';
+import { IonApp, IonRouterOutlet, IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, setupIonicReact } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { home, gridOutline, cart, person } from 'ionicons/icons';
 import { CartProvider } from './context/CartContext';
@@ -114,20 +114,24 @@ const App: React.FC = () => {
             <Route path="/more/:section" element={<ComingSoon />} />
           </IonRouterOutlet>
 
-          {/* Icon-only floating pill nav — labels removed for the new design;
-              each button keeps an aria-label for accessibility. */}
+          {/* Floating pill nav with labels — icon-only tabs forced first-time
+              users to guess what each icon meant. */}
           <IonTabBar slot="bottom" className="floating-tab-bar">
             <IonTabButton tab="home" href="/home" aria-label="Home">
               <IonIcon icon={home} />
+              <IonLabel>Home</IonLabel>
             </IonTabButton>
             <IonTabButton tab="categories" href="/products" aria-label="Categories">
               <IonIcon icon={gridOutline} />
+              <IonLabel>Categories</IonLabel>
             </IonTabButton>
             <IonTabButton tab="cart" href="/cart" aria-label="Cart">
               <IonIcon icon={cart} />
+              <IonLabel>Cart</IonLabel>
             </IonTabButton>
             <IonTabButton tab="profile" href="/profile" aria-label="Profile">
               <IonIcon icon={person} />
+              <IonLabel>Profile</IonLabel>
             </IonTabButton>
           </IonTabBar>
         </IonTabs>

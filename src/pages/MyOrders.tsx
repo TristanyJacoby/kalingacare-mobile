@@ -6,6 +6,7 @@ import {
   IonIcon,
   IonSpinner,
   useIonToast,
+  useIonAlert,
 } from "@ionic/react";
 import { arrowBackOutline, carOutline, chevronUpOutline } from "ionicons/icons";
 import {
@@ -44,7 +45,7 @@ interface Order {
 // keeping the same visual language across the app.
 const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
   Pending: { bg: "#fff2cc", color: "#916f00" },
-  Processing: { bg: "#e2f2fb", color: "#3fa8e0" },
+  Processing: { bg: "#e2f2fb", color: "#1778ad" },
   Shipped: { bg: "#e6dffb", color: "#6a3fd6" },
   Delivered: { bg: "#dcefe3", color: "#2f8f5b" },
   Cancelled: { bg: "#fde8ea", color: "#e0475f" },
@@ -71,6 +72,7 @@ function formatDate(order: Order) {
 const MyOrders: React.FC = () => {
   const navigate = useNavigate();
   const [presentToast] = useIonToast();
+  const [presentAlert] = useIonAlert();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -149,6 +151,17 @@ const MyOrders: React.FC = () => {
       setLoading(false);
     })();
   }, [navigate]);
+
+  const confirmCancel = (orderId: string) => {
+    presentAlert({
+      header: "Cancel this order?",
+      message: "This can't be undone. The order won't be delivered.",
+      buttons: [
+        { text: "Keep Order", role: "cancel" },
+        { text: "Cancel Order", role: "destructive", handler: () => handleCancel(orderId) },
+      ],
+    });
+  };
 
   const handleCancel = async (orderId: string) => {
     setCancellingId(orderId);
@@ -274,7 +287,7 @@ const MyOrders: React.FC = () => {
                   {canCancel && (
                     <button
                       className="orders-cancel-btn"
-                      onClick={() => handleCancel(order.id)}
+                      onClick={() => confirmCancel(order.id)}
                       disabled={isCancelling}
                     >
                       {isCancelling ? "Cancelling…" : "Cancel Order"}

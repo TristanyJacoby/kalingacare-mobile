@@ -294,7 +294,6 @@ const ProductDetail: React.FC = () => {
             className="pd-gallery"
             ref={galleryRef}
             onScroll={handleManualScroll}
-            style={{ background: getCategoryColor(product.category) }}
           >
             {galleryImages.map((src, i) => (
               <div className="pd-gallery-slide" key={i}>

@@ -57,7 +57,7 @@
 
 .wr-product-name {
   font-weight: 600;
-  font-size: 13.5px;
+  font-size: 13px;
   color: #1e293b;
   font-family: "Poppins", sans-serif;
 }
@@ -75,7 +75,7 @@
 }
 
 .wr-sublabel {
-  font-size: 11.5px;
+  font-size: 12px;
   color: #64748b;
   margin: -8px 0 12px;
   font-family: "Poppins", sans-serif;
@@ -91,7 +91,7 @@
   padding: 14px 20px;
   font-size: 12.5px;
   font-weight: 600;
-  color: #3fa8e0;
+  color: #1778ad;
   font-family: "Poppins", sans-serif;
   cursor: pointer;
 }
@@ -156,12 +156,12 @@
   width: calc(100% - 40px);
   margin: 8px 20px 32px;
   height: 51px;
-  background: #67c8f7;
+  background: #1778ad;
   color: #fff;
   border: none;
   border-radius: 999px;
   font-weight: 600;
-  font-size: 14.5px;
+  font-size: 14px;
   font-family: "Poppins", sans-serif;
   box-shadow: 0 8px 20px rgba(103, 200, 247, 0.4);
 }

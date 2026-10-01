@@ -18,8 +18,8 @@
   background: white;
   border: none;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,7 +29,7 @@
 }
 
 .orders-icon-spacer {
-  width: 40px;
+  width: 44px;
 }
 
 .orders-title {
@@ -54,7 +54,7 @@
 .orders-browse-btn {
   margin-top: 16px;
   padding: 12px 22px;
-  background: #3fa8e0;
+  background: #1778ad;
   color: white;
   border: none;
   border-radius: 999px;
@@ -91,7 +91,7 @@
 }
 
 .orders-status-badge {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 999px;
@@ -127,7 +127,7 @@
 
 .orders-item-qty {
   color: #94a3b8;
-  font-size: 12px;
+  font-size: 12.5px;
 }
 
 .orders-item-price {
@@ -141,17 +141,17 @@
   align-self: flex-start;
   background: #ffffff;
   border: 1.5px solid #67c8f7;
-  color: #3fa8e0;
+  color: #1778ad;
   border-radius: 999px;
   padding: 6px 14px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
   font-family: "Poppins", sans-serif;
 }
 
 .orders-reviewed-label {
   align-self: flex-start;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   color: #2f8f5b;
 }
@@ -167,7 +167,7 @@
 }
 
 .orders-total-value {
-  color: #3fa8e0;
+  color: #1778ad;
   font-size: 15px;
   font-weight: 700;
 }

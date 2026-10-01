@@ -15,11 +15,11 @@
   --background: #ffffff;
   background: #ffffff;
   border: none;
-  width: 230px;
-  max-width: 230px;
+  width: calc(100% - 32px);
+  max-width: 340px;
   margin: 0 auto 16px;
-  height: 56px;
-  border-radius: 28px;
+  height: 64px;
+  border-radius: 32px;
   box-shadow:
     0 10px 26px rgba(63, 168, 224, 0.22),
     0 2px 8px rgba(18, 40, 58, 0.08);
@@ -28,26 +28,27 @@
 .floating-tab-bar ion-tab-button {
   --background: transparent;
   --background-focused: transparent;
-  --color: #94a3b8;
-  --color-selected: #94a3b8;
+  --color: #64748b;
+  --color-selected: #1778ad;
 }
 
 .floating-tab-bar ion-tab-button ion-icon {
-  font-size: 20px;
-  color: #94a3b8;
-  padding: 8px;
-  border-radius: 999px;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
+  font-size: 22px;
+  margin-bottom: 2px;
+}
+
+.floating-tab-bar ion-tab-button ion-label {
+  font-family: "Poppins", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.floating-tab-bar ion-tab-button.tab-selected ion-label {
+  font-weight: 700;
 }
 
 .floating-tab-bar ion-tab-button.tab-selected ion-icon {
-  background: #67c8f7;
-  color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(103, 200, 247, 0.45);
+  color: #1778ad;
 }
 
 /* Safety net for the Adjust Photo (avatar crop) screen: that screen

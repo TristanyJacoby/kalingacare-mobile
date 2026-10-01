@@ -16,7 +16,7 @@
 }
 
 .home-greeting-subtitle {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 500;
   color: #64748b;
   margin: 0;
@@ -49,7 +49,7 @@
   padding: 30px 26px;
   min-height: 190px;
   border-radius: 28px;
-  background: linear-gradient(135deg, #7dd3fc 0%, #a5f3fc 45%, #f8b4d9 100%);
+  background: #67c8f7;
   box-shadow: 0 10px 24px rgba(103, 200, 247, 0.25);
   font-family: "Poppins", sans-serif;
   display: flex;
@@ -121,7 +121,7 @@
 
 .home-banner-dot.active {
   width: 18px;
-  background: #3fa8e0;
+  background: #1778ad;
 }
 
 .home-section-title-inline {
@@ -145,9 +145,9 @@
   border-radius: 24px;
   background: #ffffff;
   border: 1.5px solid #67c8f7;
-  color: #3fa8e0;
+  color: #1778ad;
   font-weight: 700;
-  font-size: 13.5px;
+  font-size: 13px;
   font-family: "Poppins", sans-serif;
 }
 
@@ -161,7 +161,7 @@
   display: inline-block;
   background: #d7ecfb;
   color: #2563a8;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
   padding: 6px 14px;
   border-radius: 999px;
@@ -181,24 +181,13 @@
   margin: 0 0 18px;
 }
 
-.home-steps-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 
-.home-step-card {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 18px;
-  box-shadow: 0 4px 14px rgba(63, 168, 224, 0.1);
-}
 
 .home-step-icon {
   width: 44px;
   height: 44px;
   border-radius: 22px;
-  background: #3fa8e0;
+  background: #1778ad;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -209,7 +198,7 @@
 
 .home-step-title {
   font-weight: 700;
-  font-size: 14.5px;
+  font-size: 14px;
   color: #1e293b;
   margin: 0 0 6px;
 }
@@ -221,55 +210,31 @@
   margin: 0;
 }
 
-.home-review-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 12px;
+
+
+
+
+
+
+
+
+/* Compact "How It Works" strip — sits under the products. */
+.home-how {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 0 20px 32px;
+  font-family: "Poppins", sans-serif;
 }
 
-.home-review-card {
+.home-how-item {
   background: #ffffff;
   border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0 4px 14px rgba(63, 168, 224, 0.1);
-}
-
-.home-review-stars {
-  display: flex;
-  gap: 2px;
-  margin-bottom: 10px;
-}
-
-.home-review-star {
-  color: #f5a623;
-  font-size: 14px;
-}
-
-.home-review-quote {
-  font-size: 12.5px;
-  line-height: 1.55;
-  color: #334155;
-  margin: 0 0 14px;
-}
-
-.home-review-name {
-  font-weight: 700;
-  font-size: 12.5px;
-  color: #1e293b;
-  margin: 0 0 2px;
-}
-
-.home-review-location {
-  font-size: 11px;
-  color: #94a3b8;
-  margin: 0;
-}
-
-.home-review-disclaimer {
-  font-size: 11px;
-  font-style: italic;
-  color: #94a3b8;
+  padding: 14px 8px;
   text-align: center;
-  margin: 4px 0 0;
+  box-shadow: 0 4px 14px rgba(23, 120, 173, 0.1);
+}
+
+.home-how-item .home-step-icon {
+  margin: 0 auto 8px;
 }

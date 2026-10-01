@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IonContent, IonPage, IonIcon, IonSpinner, useIonToast, IonMenuButton } from "@ionic/react";
-import { searchOutline, notificationsOutline, copyOutline, menuOutline, cardOutline, cubeOutline, star, starHalf, starOutline } from "ionicons/icons";
+import { searchOutline, notificationsOutline, copyOutline, menuOutline, cardOutline, cubeOutline } from "ionicons/icons";
 import { collection, query, orderBy, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
@@ -26,58 +26,12 @@ interface BannerSlide {
 // gets added later.
 const FEATURED_COUNT = 4;
 
-// Same "How It Works" 3 steps shown on the web app's landing page.
+// "How It Works" — shortened to a compact strip so products lead the page.
 const HOW_IT_WORKS = [
-  {
-    icon: searchOutline,
-    title: "1. Browse",
-    desc: "Explore mobility aids, wellness essentials, and digital health devices made for seniors.",
-  },
-  {
-    icon: cardOutline,
-    title: "2. Order & Pay",
-    desc: "Check out securely from wherever you are — pay with Cash on Delivery, priced fairly in PHP.",
-  },
-  {
-    icon: cubeOutline,
-    title: "3. We Deliver",
-    desc: "Your order goes straight to your family's doorstep, anywhere in the Philippines.",
-  },
+  { icon: searchOutline, title: "Browse", desc: "Find care essentials" },
+  { icon: cardOutline, title: "Order & Pay", desc: "Cash on Delivery" },
+  { icon: cubeOutline, title: "We Deliver", desc: "Anywhere in the PH" },
 ];
-
-// Same illustrative reviews shown on the web app's landing page.
-const REVIEWS = [
-  {
-    rating: 5,
-    quote:
-      "Ordering a blood pressure monitor for my mom in Batangas took five minutes from my phone here in Dubai. It arrived in three days — no more asking relatives to buy it for her.",
-    name: "Marites R.",
-    location: "OFW · Dubai, UAE",
-  },
-  {
-    rating: 5,
-    quote:
-      "The walker and shower bench we ordered for my father were exactly what the doctor recommended. Knowing the money went straight to his care, not somewhere else, gives me real peace of mind.",
-    name: "Jun D.",
-    location: "OFW · Riyadh, Saudi Arabia",
-  },
-  {
-    rating: 4.5,
-    quote:
-      "I love that I can see my order history and track what's already been delivered to my parents. The site is simple enough that even my mom can show me what she still needs.",
-    name: "Corazon L.",
-    location: "OFW · Vancouver, Canada",
-  },
-];
-
-// Turns a 0–5 rating into 5 star icons — full, half, or empty as needed.
-function renderStars(rating: number) {
-  return Array.from({ length: 5 }, (_, i) => {
-    const filled = rating - i;
-    const icon = filled >= 1 ? star : filled >= 0.5 ? starHalf : starOutline;
-    return <IonIcon key={i} icon={icon} className="home-review-star" />;
-  });
-}
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -367,23 +321,6 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-        <div className="home-section">
-          <span className="home-section-badge">How It Works</span>
-          <h3 className="home-section-title">Care in Three Simple Steps</h3>
-
-          <div className="home-steps-list">
-            {HOW_IT_WORKS.map((step) => (
-              <div className="home-step-card" key={step.title}>
-                <div className="home-step-icon">
-                  <IonIcon icon={step.icon} />
-                </div>
-                <p className="home-step-title">{step.title}</p>
-                <p className="home-step-desc">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
         <h3 className="home-section-title-inline home-featured-title">Featured Products</h3>
 
         {loading && (
@@ -414,23 +351,16 @@ const Home: React.FC = () => {
           View All Products
         </button>
 
-        <div className="home-section">
-          <span className="home-section-badge">Customer Reviews</span>
-          <h3 className="home-section-title">Trusted by OFW Families</h3>
-          <p className="home-section-subtitle">Real stories from customers caring for their loved ones from abroad.</p>
-
-          <div className="home-review-list">
-            {REVIEWS.map((review) => (
-              <div className="home-review-card" key={review.name}>
-                <div className="home-review-stars">{renderStars(review.rating)}</div>
-                <p className="home-review-quote">&quot;{review.quote}&quot;</p>
-                <p className="home-review-name">{review.name}</p>
-                <p className="home-review-location">{review.location}</p>
+        <div className="home-how">
+          {HOW_IT_WORKS.map((step) => (
+            <div className="home-how-item" key={step.title}>
+              <div className="home-step-icon">
+                <IonIcon icon={step.icon} />
               </div>
-            ))}
-          </div>
-
-          <p className="home-review-disclaimer">Illustrative reviews for demonstration purposes.</p>
+              <p className="home-step-title">{step.title}</p>
+              <p className="home-step-desc">{step.desc}</p>
+            </div>
+          ))}
         </div>
       </IonContent>
     </IonPage>
