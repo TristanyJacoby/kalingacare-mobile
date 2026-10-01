@@ -7,7 +7,9 @@ import {
   mailOutline,
   callOutline,
   timeOutline,
+  chatbubbleEllipsesOutline,
 } from 'ionicons/icons';
+import { useChat } from '../context/ChatContext';
 import './HelpSupport.css';
 
 // Each FAQ item is just a question + answer pair — easy to add more later
@@ -41,6 +43,7 @@ const FAQS = [
 
 const HelpSupport: React.FC = () => {
   const navigate = useNavigate();
+  const { openChat } = useChat();
 
   // Tracks which FAQ item is currently expanded. null = all collapsed.
   // Using the index as the identifier since the list above doesn't have IDs.
@@ -62,6 +65,16 @@ const HelpSupport: React.FC = () => {
           </button>
           <span className="help-title">Help &amp; Support</span>
           <div className="help-icon-spacer" />
+        </div>
+
+        <div className="help-section">
+          <button className="help-chat-card" onClick={openChat}>
+            <IonIcon icon={chatbubbleEllipsesOutline} className="help-chat-icon" />
+            <div>
+              <p className="help-chat-title">Chat with Kali</p>
+              <p className="help-chat-sub">Our AI shopping assistant — ask about products, ordering or shipping.</p>
+            </div>
+          </button>
         </div>
 
         <div className="help-section">

@@ -1,0 +1,15 @@
+/* Sits just above the floating tab bar (64px tall + 16px margin). */
+.kali-fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(env(safe-area-inset-bottom) + 92px);
+  z-index: 900;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #1778ad;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(23, 120, 173, 0.45);
+}

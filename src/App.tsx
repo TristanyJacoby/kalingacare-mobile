@@ -23,6 +23,9 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ComingSoon from './pages/ComingSoon';
 import AboutKalingaCare from './pages/AboutKalingaCare';
+import KaliChat from './pages/KaliChat';
+import KaliFab from './components/KaliFab';
+import { ChatProvider } from './context/ChatContext';
 //TBC
 import Favorites from './pages/Favorites';
 import WriteReview from './pages/WriteReview';
@@ -83,8 +86,11 @@ const App: React.FC = () => {
   return (
     <IonApp>
       <CartProvider>
+      <ChatProvider>
       <IonReactRouter>
         <SideMenu />
+        <KaliFab />
+        <KaliChat />
         <IonTabs>
           <IonRouterOutlet id="main-content">
             <Route path="/home" element={<Home />} />
@@ -126,6 +132,7 @@ const App: React.FC = () => {
           </IonTabBar>
         </IonTabs>
       </IonReactRouter>
+      </ChatProvider>
       </CartProvider>
     </IonApp>
   );
