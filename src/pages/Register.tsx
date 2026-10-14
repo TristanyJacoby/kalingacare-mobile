@@ -2,11 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IonPage, IonContent, IonIcon, useIonToast } from "@ionic/react";
 import { personOutline, mailOutline, lockClosedOutline } from "ionicons/icons";
-import {
-  createUserWithEmailAndPassword,
-  updateProfile,
-  sendEmailVerification,
-} from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { sendVerificationEmail } from "../utils/verification";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { friendlyAuthError } from "../utils/authErrors";
@@ -72,9 +69,7 @@ const Register: React.FC = () => {
       // link opens the website, then the customer comes back to the app.
       let sent = true;
       try {
-        await sendEmailVerification(cred.user, {
-          url: "https://kalingacare-drab.vercel.app/email-verified.html",
-        });
+        await sendVerificationEmail(cred.user);
       } catch {
         sent = false; // Checkout offers "Resend link" if this didn't go out
       }

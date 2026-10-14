@@ -12,7 +12,7 @@ import {
   shieldCheckmarkOutline,
 } from 'ionicons/icons';
 import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { sendEmailVerification } from 'firebase/auth';
+import { sendVerificationEmail, TooSoonError } from '../utils/verification';
 import { auth, db } from '../firebase';
 import { useCart } from '../context/CartContext';
 import { payOnline } from '../utils/payments';
@@ -271,14 +271,12 @@ const Checkout: React.FC = () => {
     if (!user) return;
     setVerifyBusy(true);
     try {
-      await sendEmailVerification(user, {
-        url: 'https://kalingacare-drab.vercel.app/email-verified.html',
-      });
+      await sendVerificationEmail(user);
       presentToast({ message: `New link sent to ${user.email}.`, duration: 2500, color: 'success' });
     } catch (err: any) {
       presentToast({
         message:
-          err?.code === 'auth/too-many-requests'
+          err instanceof TooSoonError || err?.code === 'auth/too-many-requests'
             ? 'A link was sent recently. Please wait a minute before asking for another.'
             : "Couldn't send the email right now. Please try again.",
         duration: 3000,
