@@ -272,7 +272,7 @@ const Checkout: React.FC = () => {
     setVerifyBusy(true);
     try {
       await sendEmailVerification(user, {
-        url: 'https://kalingacare-drab.vercel.app/login.html?verified=1',
+        url: 'https://kalingacare-drab.vercel.app/email-verified.html',
       });
       presentToast({ message: `New link sent to ${user.email}.`, duration: 2500, color: 'success' });
     } catch (err: any) {

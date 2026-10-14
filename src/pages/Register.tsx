@@ -73,7 +73,7 @@ const Register: React.FC = () => {
       let sent = true;
       try {
         await sendEmailVerification(cred.user, {
-          url: "https://kalingacare-drab.vercel.app/login.html?verified=1",
+          url: "https://kalingacare-drab.vercel.app/email-verified.html",
         });
       } catch {
         sent = false; // Checkout offers "Resend link" if this didn't go out
