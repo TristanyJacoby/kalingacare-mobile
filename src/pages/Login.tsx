@@ -5,7 +5,11 @@ import { mailOutline, lockClosedOutline } from "ionicons/icons";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import { friendlyAuthError } from "../utils/authErrors";
-import { signInWithGoogle } from "../utils/googleSignIn";
+import {
+  signInWithGoogle,
+  isGoogleSignInCancel,
+  googleSignInErrorMessage,
+} from "../utils/googleSignIn";
 import logo from "../assets/kalingacare-logo.png";
 import "./Auth.css";
 
@@ -48,10 +52,10 @@ const Login: React.FC = () => {
       navigate("/home");
     } catch (err: any) {
       // User backing out of the account picker isn't a real error.
-      if (err?.code !== "auth/popup-closed-by-user" && err?.message !== "canceled") {
+      if (!isGoogleSignInCancel(err)) {
         presentToast({
-          message: "Couldn't sign in with Google. Please try again.",
-          duration: 2500,
+          message: googleSignInErrorMessage(err),
+          duration: 4000,
           color: "danger",
         });
       }

@@ -58,3 +58,20 @@ export async function signInWithGoogle(): Promise<void> {
     });
   }
 }
+
+// True when the user just backed out of the Google account picker.
+export function isGoogleSignInCancel(err: any): boolean {
+  return (
+    err?.code === "auth/popup-closed-by-user" ||
+    /cancel/i.test(err?.message ?? "")
+  );
+}
+
+// Toast text for a failed Google sign-in. Includes the real error code so
+// a failure on a device says what actually went wrong instead of a generic
+// message (same lesson as web's Google Sign-In debugging).
+export function googleSignInErrorMessage(err: any): string {
+  console.error("Google Sign-In failed:", err);
+  const detail = err?.code || err?.message || "unknown error";
+  return `Couldn't sign in with Google (${detail}).`;
+}

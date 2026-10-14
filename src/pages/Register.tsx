@@ -7,7 +7,11 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { friendlyAuthError } from "../utils/authErrors";
 import { COUNTRY_CURRENCY, getOrderedCountries } from "../utils/currency";
-import { signInWithGoogle } from "../utils/googleSignIn";
+import {
+  signInWithGoogle,
+  isGoogleSignInCancel,
+  googleSignInErrorMessage,
+} from "../utils/googleSignIn";
 import logo from "../assets/kalingacare-logo.png";
 import "./Auth.css";
 
@@ -78,10 +82,11 @@ const Register: React.FC = () => {
       await signInWithGoogle();
       navigate("/home");
     } catch (err: any) {
-      if (err?.code !== "auth/popup-closed-by-user" && err?.message !== "canceled") {
+      // User backing out of the account picker isn't a real error.
+      if (!isGoogleSignInCancel(err)) {
         presentToast({
-          message: "Couldn't sign in with Google. Please try again.",
-          duration: 2500,
+          message: googleSignInErrorMessage(err),
+          duration: 4000,
           color: "danger",
         });
       }
