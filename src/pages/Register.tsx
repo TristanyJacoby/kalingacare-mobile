@@ -2,7 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IonPage, IonContent, IonIcon, useIonToast } from "@ionic/react";
 import { personOutline, mailOutline, lockClosedOutline } from "ionicons/icons";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendEmailVerification,
+} from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { friendlyAuthError } from "../utils/authErrors";
@@ -62,6 +66,24 @@ const Register: React.FC = () => {
         country,
         currency: COUNTRY_CURRENCY[country] || "PHP",
         createdAt: serverTimestamp(),
+      });
+
+      // Orders require a verified email (Firestore rules check it). The
+      // link opens the website, then the customer comes back to the app.
+      let sent = true;
+      try {
+        await sendEmailVerification(cred.user, {
+          url: "https://kalingacare-drab.vercel.app/login.html?verified=1",
+        });
+      } catch {
+        sent = false; // Checkout offers "Resend link" if this didn't go out
+      }
+      presentToast({
+        message: sent
+          ? `Account created! We sent a verification link to ${email}. Verify it before placing an order.`
+          : "Account created! We couldn't send the verification email; you can resend it at checkout.",
+        duration: 5000,
+        color: "success",
       });
 
       navigate("/home");

@@ -12,6 +12,7 @@ import {
   shieldCheckmarkOutline,
 } from 'ionicons/icons';
 import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { sendEmailVerification } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { useCart } from '../context/CartContext';
 import { payOnline } from '../utils/payments';
@@ -39,6 +40,8 @@ const Checkout: React.FC = () => {
 
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [blocked, setBlocked] = useState(false);
+  const [needsVerify, setNeedsVerify] = useState(false);
+  const [verifyBusy, setVerifyBusy] = useState(false);
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -84,6 +87,17 @@ const Checkout: React.FC = () => {
         setBlocked(true);
         setCheckingAccess(false);
         return;
+      }
+
+      // Orders need a verified email (Firestore rules check it). Refresh
+      // first, in case the link was opened since the app started.
+      if (!user.emailVerified) {
+        await user.reload().catch(() => {});
+        if (auth.currentUser?.emailVerified) {
+          await auth.currentUser.getIdToken(true).catch(() => {});
+        } else {
+          setNeedsVerify(true);
+        }
       }
 
       if (data?.currency) {
@@ -221,6 +235,85 @@ const Checkout: React.FC = () => {
           </div>
           <div className="cart-empty">
             <IonSpinner name="crescent" />
+          </div>
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  const handleCheckVerified = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    setVerifyBusy(true);
+    try {
+      await user.reload();
+      if (user.emailVerified) {
+        // New ID token, so Firestore rules see email_verified = true.
+        await user.getIdToken(true);
+        setNeedsVerify(false);
+        presentToast({ message: 'Email verified. You can place your order now.', duration: 2500, color: 'success' });
+      } else {
+        presentToast({
+          message: "Not verified yet. Open the link in the email we sent, then try again.",
+          duration: 3000,
+          color: 'warning',
+        });
+      }
+    } catch {
+      presentToast({ message: "Couldn't check right now. Please try again.", duration: 2500, color: 'danger' });
+    } finally {
+      setVerifyBusy(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    setVerifyBusy(true);
+    try {
+      await sendEmailVerification(user, {
+        url: 'https://kalingacare-drab.vercel.app/login.html?verified=1',
+      });
+      presentToast({ message: `New link sent to ${user.email}.`, duration: 2500, color: 'success' });
+    } catch (err: any) {
+      presentToast({
+        message:
+          err?.code === 'auth/too-many-requests'
+            ? 'A link was sent recently. Please wait a minute before asking for another.'
+            : "Couldn't send the email right now. Please try again.",
+        duration: 3000,
+        color: 'danger',
+      });
+    } finally {
+      setVerifyBusy(false);
+    }
+  };
+
+  if (needsVerify) {
+    return (
+      <IonPage>
+        <IonContent fullscreen className="cart-content">
+          <div className="cart-topbar">
+            <button className="cart-icon-btn" onClick={() => navigate(-1)} aria-label="Back">
+              <IonIcon icon={arrowBackOutline} />
+            </button>
+            <span className="cart-title">Checkout</span>
+            <span className="cart-icon-btn" />
+          </div>
+          <div className="cart-empty">
+            <p className="checkout-verify-title">Verify your email to place an order</p>
+            <p>
+              We sent a verification link to <strong>{auth.currentUser?.email}</strong>. Open it,
+              then come back and tap the button below. Can&apos;t find it? Check your spam folder or
+              send a new link.
+            </p>
+            <button className="cart-browse-btn" onClick={handleCheckVerified} disabled={verifyBusy}>
+              I&apos;ve verified my email
+            </button>
+            <br />
+            <button className="checkout-resend-btn" onClick={handleResendVerification} disabled={verifyBusy}>
+              Resend link
+            </button>
           </div>
         </IonContent>
       </IonPage>
