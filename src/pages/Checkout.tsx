@@ -141,7 +141,8 @@ const Checkout: React.FC = () => {
           recipient: recipientName,
           address,
           phone: contactNumber,
-          paymentMethod: 'Cash on Delivery',
+          // Short code, same as web ("cod"); Admin maps it to a label.
+          paymentMethod: 'cod',
           lat: savedCoords.lat,
           lng: savedCoords.lng,
         },
