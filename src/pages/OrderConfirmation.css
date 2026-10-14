@@ -50,3 +50,11 @@
   color: #12283a;
   font-family: 'Poppins', sans-serif;
 }
+
+.oc-paid {
+  margin: -8px 0 16px;
+  color: #2f8f5b;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}

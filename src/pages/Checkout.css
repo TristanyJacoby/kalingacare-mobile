@@ -13,6 +13,38 @@
   margin-bottom: 20px;
 }
 
+.checkout-payment-option {
+  width: 100%;
+  margin-bottom: 10px;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.checkout-payment-option.selected {
+  border: 2px solid #1778ad;
+  background: #f0f8fd;
+}
+
+.checkout-payment-note {
+  display: flex;
+  gap: 8px;
+  margin: 2px 0 20px;
+  padding: 10px 14px;
+  border: 1px solid #dce8f0;
+  border-radius: 14px;
+  background: #fafeff;
+  color: #1e293b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.checkout-payment-note ion-icon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  font-size: 16px;
+}
+
 .checkout-payment-label {
   font-size: 13px;
   color: #1e293b;

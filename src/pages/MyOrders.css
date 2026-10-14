@@ -211,3 +211,51 @@
   border-radius: 12px;
   border: 1px solid #e2eef5;
 }
+
+/* Online payment (PayMongo, test mode) */
+.orders-payment-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  font-size: 13px;
+  color: #475569;
+  font-weight: 600;
+}
+
+.orders-payment-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.orders-payment-pill.paid {
+  background: #dcefe3;
+  color: #2f8f5b;
+}
+
+.orders-payment-pill.pending {
+  background: #fff2cc;
+  color: #7a5d00;
+}
+
+.orders-payment-pill.cod {
+  background: #eef2f6;
+  color: #334155;
+}
+
+.orders-pay-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 11px;
+  background: #1778ad;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.orders-pay-btn:disabled {
+  opacity: 0.6;
+}

@@ -8,10 +8,13 @@ import {
   locationOutline,
   callOutline,
   cardOutline,
+  cashOutline,
+  shieldCheckmarkOutline,
 } from 'ionicons/icons';
 import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { useCart } from '../context/CartContext';
+import { payOnline } from '../utils/payments';
 import {
   getRates,
   convertAndFormat,
@@ -47,6 +50,8 @@ const Checkout: React.FC = () => {
     lng: null,
   });
   const [placing, setPlacing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod');
+  const [placingLabel, setPlacingLabel] = useState('Placing Order…');
 
   // Display-only currency conversion — the real charge is always PHP
   // (Cash on Delivery). See src/utils/currency.ts.
@@ -116,12 +121,15 @@ const Checkout: React.FC = () => {
     }
 
     setPlacing(true);
+    setPlacingLabel('Placing Order…');
+    const payOnlineNow = paymentMethod === 'online';
+    let orderId: string | null = null;
     try {
       // Mirrors js/checkout.js's addDoc call field-for-field, including the
       // "qty" key (web's CartItem shape), so orders created on mobile look
       // identical to web-created ones in Admin Orders / Admin Dashboard.
       // Only the items the user checked in Cart are included here.
-      await addDoc(collection(db, 'orders'), {
+      const orderRef = await addDoc(collection(db, 'orders'), {
         userId: user.uid,
         items: selectedItems.map((item) => ({
           id: item.id,
@@ -141,8 +149,8 @@ const Checkout: React.FC = () => {
           recipient: recipientName,
           address,
           phone: contactNumber,
-          // Short code, same as web ("cod"); Admin maps it to a label.
-          paymentMethod: 'cod',
+          // Short code, same as web ("cod" / "online"); Admin maps it to a label.
+          paymentMethod,
           lat: savedCoords.lat,
           lng: savedCoords.lng,
         },
@@ -150,15 +158,46 @@ const Checkout: React.FC = () => {
         // only, not a real multi-currency charge. The real total above
         // is always PHP.
         displayCurrency,
+        // Online orders start unpaid; only the server marks them "paid"
+        // after PayMongo confirms the payment.
+        ...(payOnlineNow ? { paymentStatus: 'pending' } : {}),
         createdAt: serverTimestamp(),
       });
+      orderId = orderRef.id;
 
       // Only remove the items that were actually ordered — anything left
       // unselected in the cart should still be there afterward.
       removeItems(selectedItems.map((item) => item.id));
       clearPromo();
+
+      if (payOnlineNow) {
+        setPlacingLabel('Waiting for payment…');
+        const status = await payOnline(orderRef.id);
+        if (status === 'paid') {
+          navigate('/order-confirmation', { state: { paid: true } });
+        } else {
+          presentToast({
+            message: 'Payment not completed. Your order is saved; you can pay from My Orders.',
+            duration: 3500,
+            color: 'warning',
+          });
+          navigate('/orders');
+        }
+        return;
+      }
+
       navigate('/order-confirmation');
     } catch (err) {
+      if (orderId && payOnlineNow) {
+        // The order was saved but the payment page couldn't open.
+        presentToast({
+          message: "Couldn't open the payment page. Your order is saved; you can pay from My Orders.",
+          duration: 3500,
+          color: 'warning',
+        });
+        navigate('/orders');
+        return;
+      }
       presentToast({
         message: "Something went wrong placing your order. Please try again.",
         duration: 2500,
@@ -292,13 +331,42 @@ const Checkout: React.FC = () => {
             />
           </div>
 
-          <label className="auth-label">Payment Method</label>
-          {/* Only option — matches the web app, which doesn't have PayMongo
-              (or any other payment method) wired up yet either. */}
-          <div className="checkout-payment-row">
-            <IonIcon icon={cardOutline} className="auth-input-icon" />
-            <span className="checkout-payment-label">Cash on Delivery</span>
+          <label className="auth-label" id="paymentMethodLabel">Payment Method</label>
+          {/* Same two choices as web checkout. Online goes through PayMongo's
+              hosted page, which is in test mode: keep the note until real
+              payments are activated. */}
+          <div role="radiogroup" aria-labelledby="paymentMethodLabel">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={paymentMethod === 'cod'}
+              className={`checkout-payment-row checkout-payment-option${paymentMethod === 'cod' ? ' selected' : ''}`}
+              onClick={() => setPaymentMethod('cod')}
+            >
+              <IonIcon icon={cashOutline} className="auth-input-icon" />
+              <span className="checkout-payment-label">Cash on Delivery</span>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={paymentMethod === 'online'}
+              className={`checkout-payment-row checkout-payment-option${paymentMethod === 'online' ? ' selected' : ''}`}
+              onClick={() => setPaymentMethod('online')}
+            >
+              <IonIcon icon={cardOutline} className="auth-input-icon" />
+              <span className="checkout-payment-label">Pay online: card, GCash or Maya</span>
+            </button>
           </div>
+          {paymentMethod === 'online' && (
+            <p className="checkout-payment-note">
+              <IonIcon icon={shieldCheckmarkOutline} aria-hidden="true" />
+              <span>
+                You'll pay on PayMongo's secure page, then come back to the app.{' '}
+                <strong>Test mode:</strong> no real money is charged. Use a PayMongo
+                test card such as 4343 4343 4343 4345.
+              </span>
+            </p>
+          )}
         </div>
 
         <div className="cart-summary-card">
@@ -359,7 +427,7 @@ const Checkout: React.FC = () => {
       <IonFooter className="cart-footer-outer ion-no-border">
         <IonToolbar className="cart-footer">
           <button className="cart-checkout-btn" onClick={handlePlaceOrder} disabled={placing}>
-            {placing ? 'Placing Order…' : 'Place Order'}
+            {placing ? placingLabel : 'Place Order'}
           </button>
         </IonToolbar>
       </IonFooter>

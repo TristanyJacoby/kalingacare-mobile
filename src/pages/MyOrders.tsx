@@ -18,6 +18,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import { payOnline, PAYMENT_CHANNEL_LABELS } from "../utils/payments";
 import OrderTrackingStepper from "../components/OrderTrackingStepper";
 import TrackingMap from "../components/TrackingMap";
 import "./MyOrders.css";
@@ -38,7 +39,9 @@ interface Order {
   total: number;
   status: string;
   createdAt?: { toDate: () => Date };
-  shippingInfo?: { lat?: number | null; lng?: number | null };
+  shippingInfo?: { lat?: number | null; lng?: number | null; paymentMethod?: string };
+  paymentStatus?: string;
+  payment?: { channel?: string | null };
 }
 
 // Same color-badge pattern already used for role badges in Profile.tsx —
@@ -79,6 +82,34 @@ const MyOrders: React.FC = () => {
   // Tracks which specific order is mid-cancel, so only that one card shows
   // a "Cancelling…" state instead of disabling every button on the page.
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [payingId, setPayingId] = useState<string | null>(null);
+
+  const handlePay = async (orderId: string) => {
+    setPayingId(orderId);
+    try {
+      const status = await payOnline(orderId);
+      if (status === "paid") {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === orderId ? { ...o, paymentStatus: "paid" } : o)),
+        );
+        presentToast({ message: "Payment received.", duration: 2500, color: "success" });
+      } else {
+        presentToast({
+          message: "Payment not completed. You can try again anytime.",
+          duration: 3000,
+          color: "warning",
+        });
+      }
+    } catch (err: any) {
+      presentToast({
+        message: err?.message || "Couldn't open the payment page. Please try again.",
+        duration: 3000,
+        color: "danger",
+      });
+    } finally {
+      setPayingId(null);
+    }
+  };
   // Set of "orderId:productId" strings this user has already reviewed —
   // used to show "Reviewed" instead of a Leave a Review button, since
   // Firestore's reviews rule doesn't allow editing/deleting one once
@@ -225,7 +256,26 @@ const MyOrders: React.FC = () => {
                 order.status === "New" ? "Pending" : order.status;
               const statusStyle =
                 STATUS_STYLES[displayStatus] || STATUS_STYLES.Pending;
-              const canCancel = CANCELLABLE_STATUSES.includes(order.status);
+              // Online orders: unpaid ones can be paid here; paid ones can't
+              // be self-cancelled, since refunds go through the store.
+              const isOnline = order.shippingInfo?.paymentMethod === "online";
+              const isPaid = isOnline && order.paymentStatus === "paid";
+              const canCancel =
+                CANCELLABLE_STATUSES.includes(order.status) && !isPaid;
+              const canPay = isOnline && !isPaid && order.status !== "Cancelled";
+              const channel = PAYMENT_CHANNEL_LABELS[order.payment?.channel ?? ""];
+              const paymentLabel = !isOnline
+                ? "Cash on Delivery"
+                : isPaid
+                  ? `Paid${channel ? ` · ${channel}` : ""}`
+                  : order.status === "Cancelled"
+                    ? "Not paid"
+                    : "Payment pending";
+              const paymentClass = !isOnline || order.status === "Cancelled"
+                ? "cod"
+                : isPaid
+                  ? "paid"
+                  : "pending";
               const isCancelling = cancellingId === order.id;
 
               return (
@@ -283,6 +333,23 @@ const MyOrders: React.FC = () => {
                       {peso(order.total)}
                     </span>
                   </div>
+
+                  <div className="orders-payment-row">
+                    <span>Payment</span>
+                    <span className={`orders-payment-pill ${paymentClass}`}>
+                      {paymentLabel}
+                    </span>
+                  </div>
+
+                  {canPay && (
+                    <button
+                      className="orders-pay-btn"
+                      onClick={() => handlePay(order.id)}
+                      disabled={payingId !== null}
+                    >
+                      {payingId === order.id ? "Waiting for payment…" : "Pay now"}
+                    </button>
+                  )}
 
                   {canCancel && (
                     <button

@@ -18,11 +18,12 @@ const FAQS = [
   {
     question: 'How do I place an order for my family member?',
     answer:
-      'Browse products from the Categories tab, add items to your cart, then check out with Cash on Delivery. You can save a delivery address once so it auto-fills every time.',
+      'Browse products from the Categories tab, add items to your cart, then check out with Cash on Delivery or pay online. You can save a delivery address once so it auto-fills every time.',
   },
   {
     question: 'What payment methods are supported?',
-    answer: 'Currently, KalingaCare only supports Cash on Delivery (COD) for all orders.',
+    answer:
+      'Cash on Delivery, or Pay online with a card, GCash or Maya through PayMongo. Online payments are in test mode for now, so no real money is charged. If you don\'t finish paying, the order shows "Payment pending" in My Orders, where you can pay later.',
   },
   {
     question: 'Can I cancel an order after placing it?',
