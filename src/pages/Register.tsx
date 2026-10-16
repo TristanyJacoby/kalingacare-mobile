@@ -24,14 +24,14 @@ const Register: React.FC = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   // Country drives the buyer's default display currency at checkout —
-  // see src/utils/currency.ts. Defaults to the first entry in the
-  // ordered list so the select never starts blank.
-  const [country, setCountry] = useState(getOrderedCountries()[0]);
+  // see src/utils/currency.ts. Starts empty so the buyer has to pick one
+  // instead of silently getting the first country in the list.
+  const [country, setCountry] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleSignUp = async () => {
-    if (!fullName || !email || !password || !confirmPassword) {
+    if (!fullName || !email || !password || !confirmPassword || !country) {
       presentToast({
         message: "Please fill out all fields.",
         duration: 2500,
@@ -176,13 +176,16 @@ const Register: React.FC = () => {
             />
           </div>
 
-          <label className="auth-label">Country You're Working In</label>
+          <label className="auth-label">Country You Live In</label>
           <div className="auth-input-wrap">
             <select
               className="auth-input"
               value={country}
               onChange={(e) => setCountry(e.target.value)}
             >
+              <option value="" disabled>
+                Select your country
+              </option>
               {getOrderedCountries().map((c) => (
                 <option key={c} value={c}>
                   {c}

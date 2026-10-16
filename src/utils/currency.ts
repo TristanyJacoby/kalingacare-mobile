@@ -156,6 +156,8 @@ export function convertAndFormat(
 
 // Country list ordered so the most common OFW destinations aren't buried
 // alphabetically under "Australia".
+const OTHER_COUNTRY = "Other / Not Listed";
+
 const PRIORITY_COUNTRIES = [
   "Saudi Arabia",
   "United Arab Emirates",
@@ -172,8 +174,10 @@ export function getOrderedCountries(): string[] {
   return [
     ...PRIORITY_COUNTRIES,
     ...countries
-      .filter((c) => !PRIORITY_COUNTRIES.includes(c))
+      .filter((c) => !PRIORITY_COUNTRIES.includes(c) && c !== OTHER_COUNTRY)
       .sort((a, b) => a.localeCompare(b)),
+    // Always last, after the alphabetical list.
+    OTHER_COUNTRY,
   ];
 }
 
