@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'io.ionic.starter',
-  appName: 'kalingacare-mobile',
+  appName: 'KalingaCare',
   webDir: 'dist',
   plugins: {
     // Google Sign-In (src/utils/googleSignIn.ts). The plugin loads no
