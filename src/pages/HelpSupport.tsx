@@ -1,15 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IonPage, IonContent, IonIcon } from '@ionic/react';
 import {
   arrowBackOutline,
   chevronDownOutline,
   mailOutline,
-  callOutline,
+  locationOutline,
   timeOutline,
   chatbubbleEllipsesOutline,
+  sendOutline,
 } from 'ionicons/icons';
 import { useChat } from '../context/ChatContext';
+import { auth } from '../firebase';
+import {
+  sendContactMessage,
+  SUPPORT_EMAIL,
+  SUPPORT_ADDRESS,
+  SUPPORT_HOURS,
+} from '../utils/contactApi';
 import './HelpSupport.css';
 
 // Each FAQ item is just a question + answer pair — easy to add more later
@@ -49,6 +57,47 @@ const HelpSupport: React.FC = () => {
   // Tracks which FAQ item is currently expanded. null = all collapsed.
   // Using the index as the identifier since the list above doesn't have IDs.
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  // Contact form. Name and email start from the signed-in account.
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const [status, setStatus] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) return;
+    setName((prev) => prev || user.displayName || '');
+    setEmail((prev) => prev || user.email || '');
+  }, []);
+
+  const handleSend = async () => {
+    const trimmed = { name: name.trim(), email: email.trim(), subject: subject.trim(), message: message.trim() };
+    if (!trimmed.name) return setStatus({ kind: 'error', text: 'Please enter your name.' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed.email)) {
+      return setStatus({ kind: 'error', text: 'Please enter a valid email address.' });
+    }
+    if (trimmed.message.length < 10) {
+      return setStatus({ kind: 'error', text: 'Please write a message of at least 10 characters.' });
+    }
+    setSending(true);
+    setStatus(null);
+    try {
+      await sendContactMessage(trimmed);
+      setSubject('');
+      setMessage('');
+      setStatus({
+        kind: 'success',
+        text: `Thanks, ${trimmed.name.split(' ')[0]}! Your message was sent. We'll reply to ${trimmed.email}.`,
+      });
+    } catch (err) {
+      setStatus({ kind: 'error', text: (err as Error).message });
+    } finally {
+      setSending(false);
+    }
+  };
 
   const toggleFaq = (index: number) => {
     // Clicking an already-open question closes it; clicking a closed one
@@ -105,21 +154,21 @@ const HelpSupport: React.FC = () => {
         <div className="help-section">
           <h3 className="help-section-title">Contact Us</h3>
 
-          {/* TODO: swap these placeholders for KalingaCare's real support
-              contact details once available. */}
           <div className="help-contact-row">
             <IonIcon icon={mailOutline} className="help-contact-icon" />
             <div>
               <p className="help-contact-label">Email</p>
-              <p className="help-contact-value">support@kalingacare.example.com</p>
+              <a className="help-contact-value help-contact-link" href={`mailto:${SUPPORT_EMAIL}`}>
+                {SUPPORT_EMAIL}
+              </a>
             </div>
           </div>
 
           <div className="help-contact-row">
-            <IonIcon icon={callOutline} className="help-contact-icon" />
+            <IonIcon icon={locationOutline} className="help-contact-icon" />
             <div>
-              <p className="help-contact-label">Phone</p>
-              <p className="help-contact-value">+63 900 000 0000</p>
+              <p className="help-contact-label">Office</p>
+              <p className="help-contact-value">{SUPPORT_ADDRESS}</p>
             </div>
           </div>
 
@@ -127,8 +176,67 @@ const HelpSupport: React.FC = () => {
             <IonIcon icon={timeOutline} className="help-contact-icon" />
             <div>
               <p className="help-contact-label">Support Hours</p>
-              <p className="help-contact-value">Mon–Sat, 9:00 AM – 6:00 PM (PH Time)</p>
+              <p className="help-contact-value">{SUPPORT_HOURS}</p>
             </div>
+          </div>
+        </div>
+
+        <div className="help-section">
+          <h3 className="help-section-title">Send Us a Message</h3>
+          <div className="help-form">
+            <label className="help-form-label" htmlFor="contact-name">Your name</label>
+            <input
+              id="contact-name"
+              className="help-form-input"
+              value={name}
+              maxLength={80}
+              autoComplete="name"
+              onChange={(e) => setName(e.target.value)}
+            />
+
+            <label className="help-form-label" htmlFor="contact-email">Your email</label>
+            <input
+              id="contact-email"
+              className="help-form-input"
+              type="email"
+              inputMode="email"
+              value={email}
+              maxLength={254}
+              autoComplete="email"
+              onChange={(e) => setEmail(e.target.value)}
+            />
+
+            <label className="help-form-label" htmlFor="contact-subject">
+              Subject <span className="help-form-optional">(optional)</span>
+            </label>
+            <input
+              id="contact-subject"
+              className="help-form-input"
+              value={subject}
+              maxLength={120}
+              onChange={(e) => setSubject(e.target.value)}
+            />
+
+            <label className="help-form-label" htmlFor="contact-message">Message</label>
+            <textarea
+              id="contact-message"
+              className="help-form-input help-form-textarea"
+              value={message}
+              maxLength={2000}
+              rows={5}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+
+            {status && (
+              <p className={`help-form-status ${status.kind}`} role="status">
+                {status.text}
+              </p>
+            )}
+
+            <button className="help-form-send" onClick={handleSend} disabled={sending}>
+              <IonIcon icon={sendOutline} />
+              {sending ? 'Sending...' : 'Send message'}
+            </button>
           </div>
         </div>
       </IonContent>

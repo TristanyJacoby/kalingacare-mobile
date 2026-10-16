@@ -1,8 +1,7 @@
 // src/components/SideMenu.tsx
 // KalingaCare — side menu. Opens by swiping from the left edge of the
 // screen (IonMenu's default behavior) or by tapping the menu button in
-// the header. Real pages link to real pages; the two that don't have
-// content yet go to the shared ComingSoon placeholder.
+// the header. Every item opens a real page.
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -25,6 +24,7 @@ import {
   heartOutline,
   timeOutline,
   informationCircleOutline,
+  peopleOutline,
   helpCircleOutline,
   logOutOutline,
 } from "ionicons/icons";
@@ -44,8 +44,9 @@ const MENU_ITEMS: MenuItem[] = [
   { label: "Products", icon: gridOutline, path: "/products" },
   { label: "My Orders", icon: receiptOutline, path: "/orders" },
   { label: "Favorites", icon: heartOutline, path: "/favorites" },
-  { label: "Company History", icon: timeOutline, path: "/more/company-history" },
+  { label: "Company History", icon: timeOutline, path: "/company-history" },
   { label: "About KalingaCare", icon: informationCircleOutline, path: "/about" },
+  { label: "Meet the Team", icon: peopleOutline, path: "/team" },
   { label: "Help & Support", icon: helpCircleOutline, path: "/help" },
 ];
 

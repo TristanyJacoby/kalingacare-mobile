@@ -1,7 +1,6 @@
 // src/pages/ComingSoon.tsx
-// KalingaCare — generic placeholder page. Used by side-menu items that
-// don't have real content yet (Company History), so tapping them goes
-// somewhere real instead of doing nothing.
+// KalingaCare — generic placeholder page for /more/:section links whose
+// content isn't built yet. No menu item points here at the moment.
 import { useParams, useNavigate } from "react-router-dom";
 import { IonPage, IonContent, IonIcon } from "@ionic/react";
 import { arrowBackOutline, hourglassOutline } from "ionicons/icons";

@@ -1,14 +1,20 @@
 // src/pages/AboutKalingaCare.tsx
 // KalingaCare — "About KalingaCare" page, opened from the side menu.
-// Mirrors two sections from the web app's landing page: the trust
-// stats strip and the "Meet the Team" section. Team members don't have
-// photos here (this is a mobile app, not the marketing site), so each
-// one gets an initials avatar in the same style used for user profile
-// photos elsewhere in the app.
+// The trust stats strip (same as the website's landing page) followed by
+// "About the App": what the app does and what customers can do in it.
+// Meet the Team has its own page (MeetTheTeam.tsx).
 import { useNavigate } from "react-router-dom";
 import { IonPage, IonContent, IonIcon } from "@ionic/react";
-import { arrowBackOutline } from "ionicons/icons";
-import { initials } from "../utils/avatar";
+import {
+  arrowBackOutline,
+  bagHandleOutline,
+  cashOutline,
+  cardOutline,
+  mapOutline,
+  chatbubblesOutline,
+  syncOutline,
+  shieldCheckmarkOutline,
+} from "ionicons/icons";
 import "./AboutKalingaCare.css";
 
 const STATS = [
@@ -17,31 +23,41 @@ const STATS = [
   { value: "100%", label: "Delivered in PH" },
 ];
 
-const TEAM = [
+const FEATURES = [
   {
-    name: "Tristan Jacob Dela Pena",
-    role: "Project Lead & Developer",
-    blurb: "Led systems integration and architecture, and full-stack development of the platform.",
+    icon: bagHandleOutline,
+    title: "Shop senior care products",
+    text: "Mobility aids, wellness essentials and digital health devices, with photos, reviews from real buyers and a favorites list.",
   },
   {
-    name: "Cliff Jefferson Bautista",
-    role: "Developer",
-    blurb: "Contributed to requirements analysis and platform development.",
+    icon: cashOutline,
+    title: "Prices in your currency",
+    text: "See prices in the currency of the country you work in. Orders are charged in Philippine pesos.",
   },
   {
-    name: "Adrian Carlo Quiambao",
-    role: "Developer",
-    blurb: "Contributed to system planning and platform development.",
+    icon: cardOutline,
+    title: "Pay your way",
+    text: "Cash on Delivery, or pay online with a card, GCash or Maya. Online payments are in test mode for now.",
   },
   {
-    name: "Trisha Anne Trinidad",
-    role: "Developer",
-    blurb: "Contributed to business goal planning and platform development.",
+    icon: mapOutline,
+    title: "Track every order",
+    text: "Follow each order from Pending to Delivered in My Orders, with a map of the delivery route.",
   },
   {
-    name: "Robert Gabriel Villar",
-    role: "Developer",
-    blurb: "Contributed to project planning and platform development.",
+    icon: chatbubblesOutline,
+    title: "Ask Kali",
+    text: "Our chat assistant answers questions about products, ordering and shipping, in English or Filipino.",
+  },
+  {
+    icon: syncOutline,
+    title: "One account, web and app",
+    text: "Sign in with the same account on the KalingaCare website. Your orders and favorites are the same on both.",
+  },
+  {
+    icon: shieldCheckmarkOutline,
+    title: "Safe ordering",
+    text: "Accounts confirm their email before ordering, and online payments go through PayMongo's secure page.",
   },
 ];
 
@@ -69,24 +85,30 @@ const AboutKalingaCare: React.FC = () => {
         </div>
 
         <div className="about-section">
-          <span className="about-section-badge">Meet the Team</span>
-          <h3 className="about-section-title">The People Behind KalingaCare</h3>
+          <span className="about-section-badge">About the App</span>
+          <h3 className="about-section-title">Care for Family Back Home, From Anywhere</h3>
           <p className="about-section-subtitle">
-            NexCode &middot; IT31S4 &middot; IT 009 Systems Integration and Architecture 1
+            The KalingaCare app lets Overseas Filipino Workers buy healthcare and wellness products
+            for their loved ones in the Philippines and have them delivered to their door.
           </p>
 
-          <div className="about-team-list">
-            {TEAM.map((member) => (
-              <div className="about-team-card" key={member.name}>
-                <div className="about-team-avatar">{initials(member.name)}</div>
+          <div className="about-feature-list">
+            {FEATURES.map((feature) => (
+              <div className="about-feature-card" key={feature.title}>
+                <div className="about-feature-icon">
+                  <IonIcon icon={feature.icon} />
+                </div>
                 <div className="about-team-info">
-                  <p className="about-team-name">{member.name}</p>
-                  <p className="about-team-role">{member.role}</p>
-                  <p className="about-team-blurb">{member.blurb}</p>
+                  <p className="about-team-name">{feature.title}</p>
+                  <p className="about-team-blurb">{feature.text}</p>
                 </div>
               </div>
             ))}
           </div>
+
+          <button className="about-team-link" onClick={() => navigate("/team")}>
+            Meet the team behind KalingaCare
+          </button>
         </div>
       </IonContent>
     </IonPage>

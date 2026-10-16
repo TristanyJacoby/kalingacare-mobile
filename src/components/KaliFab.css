@@ -1,15 +1,94 @@
-/* Sits just above the floating tab bar (64px tall + 16px margin). */
+/* Sits just above the floating tab bar (64px tall + 16px margin).
+   Sky blue with a navy icon and a white ring, same as the website's
+   "Ask Kali" button, so it never blends in with the deep-blue buttons. */
 .kali-fab {
   position: fixed;
   right: 16px;
   bottom: calc(env(safe-area-inset-bottom) + 92px);
   z-index: 900;
-  width: 52px;
-  height: 52px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
-  background: #1778ad;
+  border: 3px solid #ffffff;
+  background: #67c8f7;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 20px rgba(23, 120, 173, 0.45);
+  box-shadow:
+    0 10px 24px rgba(18, 40, 58, 0.3),
+    0 2px 6px rgba(18, 40, 58, 0.16);
+}
+
+/* One-time hint bubble above the button. */
+.kali-hint {
+  position: fixed;
+  right: 16px;
+  bottom: calc(env(safe-area-inset-bottom) + 158px);
+  z-index: 900;
+  max-width: min(250px, calc(100vw - 32px));
+  background: #ffffff;
+  border: 1px solid #dce8f0;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(18, 40, 58, 0.18);
+  font-family: "Poppins", sans-serif;
+  animation: kali-hint-in 0.2s ease-out;
+}
+
+.kali-hint::after {
+  content: "";
+  position: absolute;
+  right: 20px;
+  bottom: -7px;
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  border-right: 1px solid #dce8f0;
+  border-bottom: 1px solid #dce8f0;
+  transform: rotate(45deg);
+}
+
+.kali-hint-body {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 10px 34px 10px 14px;
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: #334155;
+}
+
+.kali-hint-body strong {
+  display: block;
+  color: #12283a;
+  font-size: 13px;
+}
+
+.kali-hint-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: #64748b;
+  font-size: 18px;
+  line-height: 1;
+}
+
+@keyframes kali-hint-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kali-hint {
+    animation: none;
+  }
 }

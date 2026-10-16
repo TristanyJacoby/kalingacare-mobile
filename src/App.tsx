@@ -23,6 +23,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ComingSoon from './pages/ComingSoon';
 import AboutKalingaCare from './pages/AboutKalingaCare';
+import MeetTheTeam from './pages/MeetTheTeam';
+import CompanyHistory from './pages/CompanyHistory';
 import KaliChat from './pages/KaliChat';
 import KaliFab from './components/KaliFab';
 import { ChatProvider } from './context/ChatContext';
@@ -111,6 +113,8 @@ const App: React.FC = () => {
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/review/:orderId/:productId" element={<WriteReview />} />
             <Route path="/about" element={<AboutKalingaCare />} />
+            <Route path="/team" element={<MeetTheTeam />} />
+            <Route path="/company-history" element={<CompanyHistory />} />
             <Route path="/more/:section" element={<ComingSoon />} />
           </IonRouterOutlet>
 

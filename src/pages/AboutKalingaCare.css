@@ -155,3 +155,113 @@
   color: #64748b;
   margin: 0;
 }
+
+/* About the App */
+.about-feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.about-feature-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 4px 14px rgba(63, 168, 224, 0.1);
+}
+
+.about-feature-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background: #e2f2fb;
+  color: #1778ad;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.about-team-link {
+  margin-top: 18px;
+  width: 100%;
+  height: 48px;
+  border: 1.5px solid #67c8f7;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1778ad;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+/* Company History timeline */
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+.history-list::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 27px;
+  width: 2px;
+  background: #dce8f0;
+}
+
+.history-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+}
+
+.history-item + .history-item {
+  margin-top: 12px;
+}
+
+.history-year {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 56px;
+  margin-top: 12px;
+  text-align: center;
+  background: #1778ad;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 5px 0;
+  border-radius: 999px;
+}
+
+.history-card {
+  flex: 1;
+  min-width: 0;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 4px 14px rgba(63, 168, 224, 0.1);
+}
+
+.history-title {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #1e293b;
+  margin: 0 0 4px;
+}
+
+.history-text {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #64748b;
+  margin: 0;
+}
