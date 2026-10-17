@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { IonContent, IonPage, IonIcon, IonSpinner, IonMenuButton } from "@ionic/react";
-import { searchOutline, notificationsOutline, cartOutline, menuOutline } from "ionicons/icons";
+import { searchOutline, cartOutline, menuOutline } from "ionicons/icons";
 import { collection, query, orderBy, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
@@ -9,11 +9,12 @@ import { useCart } from "../context/CartContext";
 import { getRates, type RatesResult } from "../utils/currency";
 import ProductCard, { type CardProduct } from "../components/ProductCard";
 import logo from "../assets/kalingacare-logo.png";
+import NotificationBell from "../components/NotificationBell";
 import "./Shop.css";
 
 const Products: React.FC = () => {
   const navigate = useNavigate();
-  const { totalItems } = useCart();
+  const { productCount } = useCart();
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState<CardProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,12 +104,10 @@ const Products: React.FC = () => {
           <img src={logo} alt="KalingaCare" className="shop-logo" />
           <span className="shop-appname">KalingaCare</span>
           <div className="shop-header-icons">
-            <button className="shop-icon-btn" aria-label="Notifications" onClick={() => navigate("/notifications")}>
-              <IonIcon icon={notificationsOutline} />
-            </button>
+            <NotificationBell className="shop-icon-btn" />
             <button className="shop-icon-btn" aria-label="Cart" onClick={() => navigate("/cart")}>
               <IonIcon icon={cartOutline} />
-              {totalItems > 0 && <span className="shop-cart-badge">{totalItems}</span>}
+              {productCount > 0 && <span className="shop-cart-badge">{productCount}</span>}
             </button>
           </div>
         </div>

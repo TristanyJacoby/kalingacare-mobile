@@ -15,6 +15,8 @@ import {
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import NotificationBell from "../components/NotificationBell";
+import { getDotEnabled, setDotEnabled } from "../utils/orderNotifications";
 import "./Profile.css";
 
 import { useRef } from "react";
@@ -50,7 +52,7 @@ const Profile: React.FC = () => {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("user");
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
-  const [notificationsOn, setNotificationsOn] = useState(true);
+  const [notificationsOn, setNotificationsOn] = useState(getDotEnabled());
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   // The raw photo the user just picked, shown in the crop step before it
@@ -137,13 +139,7 @@ const Profile: React.FC = () => {
       <IonContent fullscreen className="profile-content">
         <div className="profile-header">
           <span className="profile-title">Profile</span>
-          <button
-            className="profile-icon-btn"
-            aria-label="Notifications"
-            onClick={() => navigate("/notifications")}
-          >
-            <IonIcon icon={notificationsOutline} />
-          </button>
+          <NotificationBell className="profile-icon-btn" />
         </div>
 
         <div className="profile-card">
@@ -156,7 +152,11 @@ const Profile: React.FC = () => {
               />
             ) : (
               <span className="profile-avatar-initials">
-                {initials(fullName)}
+                {fullName.trim() ? (
+                  initials(fullName)
+                ) : (
+                  <IonIcon icon={personOutline} aria-hidden="true" />
+                )}
               </span>
             )}
 
@@ -239,9 +239,9 @@ const Profile: React.FC = () => {
             />
           </button>
 
-          {/* Visual only — doesn't control real notification delivery, since
-              that feature doesn't exist anywhere in the app yet (same honest
-              caveat as Home's bell icon). */}
+          {/* Controls the unread dot on the bell (order updates still
+              appear on the Notifications screen either way). Saved on the
+              phone. */}
           <div className="profile-menu-row profile-menu-row-toggle">
             <IonIcon
               icon={notificationsOutline}
@@ -250,8 +250,13 @@ const Profile: React.FC = () => {
             <span className="profile-menu-label">Notifications</span>
             <button
               className={`profile-toggle ${notificationsOn ? "on" : ""}`}
-              onClick={() => setNotificationsOn((v) => !v)}
-              aria-label="Toggle notifications"
+              onClick={() => {
+                const next = !notificationsOn;
+                setNotificationsOn(next);
+                setDotEnabled(next);
+              }}
+              aria-label="Show a dot on the bell for new order updates"
+              aria-pressed={notificationsOn}
             >
               <span className="profile-toggle-knob" />
             </button>

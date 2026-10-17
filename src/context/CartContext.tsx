@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase';
 import { validatePromoCode, computeDiscount, PromoCode } from '../utils/promoCodes';
 
@@ -22,6 +23,8 @@ interface CartContextValue {
   deselectAll: () => void;
   clearCart: () => void;
   totalItems: number;
+  /** Number of different products in the cart (what the cart badges show). */
+  productCount: number;
   subtotal: number;
   selectedItems: CartItem[];
   selectedCount: number;
@@ -34,8 +37,51 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
+// The cart is saved on the phone per account, so it survives closing the
+// app and a different person signing in on the same phone doesn't inherit
+// it. (Only signed-in users can add to cart; see utils/cartGuard.ts.)
+const cartKey = (uid: string) => `kalingacare_cart_${uid}`;
+
+function loadSavedCart(uid: string): CartItem[] {
+  try {
+    const saved = JSON.parse(localStorage.getItem(cartKey(uid)) || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCart(uid: string, items: CartItem[]) {
+  try {
+    localStorage.setItem(cartKey(uid), JSON.stringify(items));
+  } catch {
+    // Storage full (product photos can be large): keep the cart without
+    // photos rather than not at all. The Cart screen shows a placeholder.
+    try {
+      localStorage.setItem(cartKey(uid), JSON.stringify(items.map((i) => ({ ...i, img: undefined }))));
+    } catch {
+      // Give up quietly; the cart still works until the app closes.
+    }
+  }
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  // Whose cart is loaded; null while signed out.
+  const ownerRef = useRef<string | null>(null);
+
+  useEffect(
+    () =>
+      onAuthStateChanged(auth, (user) => {
+        ownerRef.current = user?.uid ?? null;
+        setItems(user ? loadSavedCart(user.uid) : []);
+      }),
+    [],
+  );
+
+  useEffect(() => {
+    if (ownerRef.current) saveCart(ownerRef.current, items);
+  }, [items]);
 
   const addItem: CartContextValue['addItem'] = (item, quantity = 1) => {
     setItems((prev) => {
@@ -78,6 +124,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = () => setItems([]);
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
+  // Badges count products, not units: 5 rollators + 1 gown = 2, same as web.
+  const productCount = items.length;
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   const selectedItems = items.filter((i) => i.selected);
@@ -112,6 +160,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         deselectAll,
         clearCart,
         totalItems,
+        productCount,
         subtotal,
         selectedItems,
         selectedCount,

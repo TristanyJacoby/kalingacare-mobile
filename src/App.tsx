@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Navigate, Route } from 'react-router-dom';
 import { IonApp, IonRouterOutlet, IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, setupIonicReact } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { home, gridOutline, cart, person } from 'ionicons/icons';
+import { home, gridOutline, person } from 'ionicons/icons';
 import { CartProvider } from './context/CartContext';
 import SideMenu from './components/SideMenu';
 import SplashScreen from './components/SplashScreen';
@@ -119,7 +119,8 @@ const App: React.FC = () => {
           </IonRouterOutlet>
 
           {/* Floating pill nav with labels — icon-only tabs forced first-time
-              users to guess what each icon meant. */}
+              users to guess what each icon meant. No Cart tab: the cart
+              icon in the Home / Categories / Product headers opens it. */}
           <IonTabBar slot="bottom" className="floating-tab-bar">
             <IonTabButton tab="home" href="/home" aria-label="Home">
               <IonIcon icon={home} />
@@ -128,10 +129,6 @@ const App: React.FC = () => {
             <IonTabButton tab="categories" href="/products" aria-label="Categories">
               <IonIcon icon={gridOutline} />
               <IonLabel>Categories</IonLabel>
-            </IonTabButton>
-            <IonTabButton tab="cart" href="/cart" aria-label="Cart">
-              <IonIcon icon={cart} />
-              <IonLabel>Cart</IonLabel>
             </IonTabButton>
             <IonTabButton tab="profile" href="/profile" aria-label="Profile">
               <IonIcon icon={person} />

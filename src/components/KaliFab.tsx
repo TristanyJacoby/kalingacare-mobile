@@ -47,18 +47,63 @@ const KaliFab: React.FC = () => {
   const [showHint, setShowHint] = useState(false);
   const hidden = isOpen || HIDDEN_ON.some((p) => pathname.startsWith(p));
 
+  // Slide aside while the screen scrolls, come back ~0.7s after it stops.
+  // Ionic scrolls inside each page's <ion-content>, so listen on their
+  // scroll elements (re-checked when the route changes, since pages are
+  // added as you navigate).
+  const [tucked, setTucked] = useState(false);
+
+  // "Ask Kali" label: shown as a pill for the first few seconds after the
+  // app opens (like the website's button), then it shrinks to the icon.
+  // Only counts time while the button is actually on screen, and scrolling
+  // shrinks it right away.
+  const [expanded, setExpanded] = useState(true);
   useEffect(() => {
-    if (hidden || hintSeen()) return;
-    const show = setTimeout(() => setShowHint(true), 2000);
+    if (hidden || !expanded) return;
+    const t = setTimeout(() => setExpanded(false), 5000);
+    return () => clearTimeout(t);
+  }, [hidden, expanded]);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onScroll = () => {
+      setExpanded(false);
+      setTucked(true);
+      clearTimeout(timer);
+      timer = setTimeout(() => setTucked(false), 700);
+    };
+    const attached: HTMLElement[] = [];
+    // Wait a tick so the new page's ion-content exists.
+    const setup = setTimeout(async () => {
+      const contents = Array.from(document.querySelectorAll('ion-content')) as HTMLIonContentElement[];
+      for (const c of contents) {
+        const el = await c.getScrollElement().catch(() => null);
+        if (el) {
+          el.addEventListener('scroll', onScroll, { passive: true });
+          attached.push(el);
+        }
+      }
+    }, 300);
+    return () => {
+      clearTimeout(setup);
+      clearTimeout(timer);
+      attached.forEach((el) => el.removeEventListener('scroll', onScroll));
+    };
+  }, [pathname]);
+
+  useEffect(() => {
+    // Waits for the "Ask Kali" label to shrink first so they don't overlap.
+    if (hidden || expanded || hintSeen()) return;
+    const show = setTimeout(() => setShowHint(true), 800);
     const hide = setTimeout(() => {
       setShowHint(false);
       markHintSeen();
-    }, 11000);
+    }, 9800);
     return () => {
       clearTimeout(show);
       clearTimeout(hide);
     };
-  }, [hidden]);
+  }, [hidden, expanded]);
 
   if (hidden) return null;
 
@@ -85,8 +130,15 @@ const KaliFab: React.FC = () => {
           </button>
         </div>
       )}
-      <button className="kali-fab" onClick={open} aria-label="Ask Kali, the AI shopping assistant">
+      <button
+        className={`kali-fab ${expanded ? 'expanded' : ''} ${tucked ? 'tucked' : ''}`}
+        onClick={open}
+        aria-label="Ask Kali, the AI shopping assistant"
+      >
         <KaliIcon />
+        <span className="kali-fab-label" aria-hidden="true">
+          Ask Kali
+        </span>
       </button>
     </>
   );

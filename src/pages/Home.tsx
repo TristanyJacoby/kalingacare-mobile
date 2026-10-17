@@ -1,14 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IonContent, IonPage, IonIcon, IonSpinner, useIonToast, IonMenuButton } from "@ionic/react";
-import { searchOutline, notificationsOutline, copyOutline, menuOutline, cardOutline, cubeOutline } from "ionicons/icons";
+import { searchOutline, copyOutline, menuOutline, cardOutline, cubeOutline, cartOutline, personOutline } from "ionicons/icons";
 import { collection, query, orderBy, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { initials } from "../utils/avatar";
 import { getRates, type RatesResult } from "../utils/currency";
 import ProductCard, { type CardProduct } from "../components/ProductCard";
+import { useCart } from "../context/CartContext";
 import logo from "../assets/kalingacare-logo.png";
+import NotificationBell from "../components/NotificationBell";
 import "./Shop.css";
 import "./Home.css";
 
@@ -35,6 +37,7 @@ const HOW_IT_WORKS = [
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const { productCount } = useCart();
   const [presentToast] = useIonToast();
   const [products, setProducts] = useState<CardProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +45,7 @@ const Home: React.FC = () => {
 
   const [userName, setUserName] = useState("");
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
 
   const [displayCurrency, setDisplayCurrency] = useState("PHP");
   const [rates, setRates] = useState<RatesResult | null>(null);
@@ -80,7 +84,11 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setSignedIn(!!user);
       if (!user) {
+        // Clear the previous account's name/photo after signing out.
+        setUserName("");
+        setUserPhoto(null);
         setFavoriteIds(new Set());
         return;
       }
@@ -259,14 +267,27 @@ const Home: React.FC = () => {
           <img src={logo} alt="KalingaCare" className="shop-logo" />
           <span className="shop-appname">KalingaCare</span>
           <div className="shop-header-icons">
-            <button className="shop-icon-btn" aria-label="Notifications" onClick={() => navigate("/notifications")}>
-              <IonIcon icon={notificationsOutline} />
+            <NotificationBell className="shop-icon-btn" />
+            <button
+              className="shop-icon-btn"
+              aria-label={productCount > 0 ? `Cart, ${productCount} products` : "Cart"}
+              onClick={() => navigate("/cart")}
+            >
+              <IonIcon icon={cartOutline} />
+              {productCount > 0 && <span className="shop-cart-badge">{productCount}</span>}
             </button>
-            <button className="shop-avatar-btn" aria-label="Profile" onClick={() => navigate("/profile")}>
+            {/* Guests get a "Sign in" person icon instead of a "?" avatar. */}
+            <button
+              className={`shop-avatar-btn ${signedIn ? "" : "guest"}`}
+              aria-label={signedIn ? "Profile" : "Sign in"}
+              onClick={() => navigate(signedIn ? "/profile" : "/login")}
+            >
               {userPhoto ? (
                 <img src={userPhoto} alt={userName} className="shop-avatar-img" />
-              ) : (
+              ) : signedIn && userName ? (
                 <span className="shop-avatar-initials">{initials(userName)}</span>
+              ) : (
+                <IonIcon icon={personOutline} className="shop-avatar-icon" />
               )}
             </button>
           </div>

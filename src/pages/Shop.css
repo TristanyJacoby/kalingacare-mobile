@@ -69,6 +69,16 @@
   padding: 0 3px;
 }
 
+.shop-avatar-btn.guest {
+  background: #ffffff;
+  border: 1.5px solid #67c8f7;
+}
+
+.shop-avatar-icon {
+  font-size: 17px;
+  color: #1778ad;
+}
+
 .shop-avatar-btn {
   width: 30px;
   height: 30px;

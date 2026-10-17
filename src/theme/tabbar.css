@@ -17,7 +17,12 @@
   border: none;
   width: calc(100% - 32px);
   max-width: 340px;
-  margin: 0 auto 16px;
+  /* Ionic pads a bottom tab bar by the phone's gesture-bar inset, which
+     on this floating pill landed INSIDE it: icons hugged the top with an
+     empty strip below. The inset goes into the margin instead, so the pill
+     stays 64px with its icons centered and floats above the gesture bar. */
+  padding-bottom: 0;
+  margin: 0 auto calc(12px + env(safe-area-inset-bottom));
   height: 64px;
   border-radius: 32px;
   box-shadow:

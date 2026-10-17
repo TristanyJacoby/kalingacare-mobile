@@ -24,6 +24,7 @@ import {
 } from '../utils/currency';
 import './Auth.css';
 import './Cart.css';
+import AddressMapPicker from '../components/AddressMapPicker';
 import './Checkout.css';
 
 // Mirrors js/site.js exactly — same flat shipping fee the web app uses.
@@ -49,6 +50,14 @@ const Checkout: React.FC = () => {
   const [address, setAddress] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [savedCoords, setSavedCoords] = useState<{ lat: number | null; lng: number | null }>({
+    lat: null,
+    lng: null,
+  });
+  // Where the checkout map starts (the saved default address). Kept apart
+  // from savedCoords, which follows the pin for this order: the map
+  // rebuilds when its starting point changes, so it must not change on
+  // every drag.
+  const [mapStart, setMapStart] = useState<{ lat: number | null; lng: number | null }>({
     lat: null,
     lng: null,
   });
@@ -111,15 +120,17 @@ const Checkout: React.FC = () => {
         setRecipientName(defaultAddress.recipient || '');
         setAddress(defaultAddress.address || '');
         setContactNumber(defaultAddress.phone || '');
-        setSavedCoords({
-          lat: defaultAddress.lat ?? null,
-          lng: defaultAddress.lng ?? null,
-        });
+        const start = { lat: defaultAddress.lat ?? null, lng: defaultAddress.lng ?? null };
+        setSavedCoords(start);
+        setMapStart(start);
       } else if (data?.savedAddress) {
         const legacy = data.savedAddress;
         setRecipientName(legacy.recipient || '');
         setAddress(legacy.address || '');
         setContactNumber(legacy.phone || '');
+        const start = { lat: legacy.lat ?? null, lng: legacy.lng ?? null };
+        setSavedCoords(start);
+        setMapStart(start);
       }
 
       setCheckingAccess(false);
@@ -399,6 +410,22 @@ const Checkout: React.FC = () => {
           </div>
 
           <label className="auth-label">Delivery Address</label>
+          {/* Same idea as the website's checkout: search, drag the pin or
+              tap the map to set where this order goes; the address below
+              fills in and stays editable. Changes apply to this order only,
+              not to Saved Addresses. */}
+          <p className="checkout-map-hint">
+            Search, drag the pin, or tap the map to set the exact spot. You can still edit the
+            address below (unit no., landmark).
+          </p>
+          <AddressMapPicker
+            savedLat={mapStart.lat}
+            savedLng={mapStart.lng}
+            onLocationChange={({ address: foundAddress, lat, lng }) => {
+              setSavedCoords({ lat, lng });
+              if (foundAddress) setAddress(foundAddress);
+            }}
+          />
           <div className="auth-input-wrap">
             <IonIcon icon={locationOutline} className="auth-input-icon" />
             <input

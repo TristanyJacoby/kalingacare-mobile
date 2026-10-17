@@ -94,3 +94,11 @@
   font-size: 13px;
   text-decoration: underline;
 }
+
+/* Map pin picker above the delivery address */
+.checkout-map-hint {
+  font-size: 12px;
+  color: #64748b;
+  margin: -4px 0 8px;
+  line-height: 1.45;
+}

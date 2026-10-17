@@ -81,7 +81,7 @@ function StarRow({ value }: { value: number }) {
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addItem, totalItems } = useCart();
+  const { addItem, productCount } = useCart();
   const [presentToast] = useIonToast();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -235,11 +235,18 @@ const ProductDetail: React.FC = () => {
   const handleAddToCart = async () => {
     if (!product) return;
 
-    // Mirrors js/checkout.js and the web app's cart-blocking rule — internal
-    // accounts (staff/admin/superadmin) don't place real customer orders, so
-    // they shouldn't be able to add to cart either.
-    const allowed = await canAddToCart();
-    if (!allowed) {
+    // Guests sign in first; staff/admin accounts can't shop (cartGuard.ts).
+    const access = await canAddToCart();
+    if (access === 'guest') {
+      presentToast({
+        message: 'Please sign in to add items to your cart.',
+        duration: 2500,
+        color: 'warning',
+      });
+      navigate('/login');
+      return;
+    }
+    if (access === 'staff') {
       presentToast({
         message: "Staff and admin accounts can't add items to cart.",
         duration: 2500,
@@ -285,7 +292,7 @@ const ProductDetail: React.FC = () => {
           </button>
           <button className="pd-icon-btn" onClick={() => navigate('/cart')} aria-label="Cart">
             <IonIcon icon={cartOutline} />
-            {totalItems > 0 && <span className="pd-cart-badge">{totalItems}</span>}
+            {productCount > 0 && <span className="pd-cart-badge">{productCount}</span>}
           </button>
         </div>
 

@@ -1,4 +1,6 @@
-/* Sits just above the floating tab bar (64px tall + 16px margin).
+/* Floats just above the tab bar (64px pill + 12px margin). While a screen
+   is scrolling it slides mostly off the right edge (.tucked, toggled in
+   KaliFab.tsx) so it doesn't cover products, then comes back.
    Sky blue with a navy icon and a white ring, same as the website's
    "Ask Kali" button, so it never blends in with the deep-blue buttons. */
 .kali-fab {
@@ -8,15 +10,56 @@
   z-index: 900;
   width: 54px;
   height: 54px;
-  border-radius: 50%;
+  border-radius: 27px;
   border: 3px solid #ffffff;
   background: #67c8f7;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  /* Icon stays put on the left; the label is clipped while collapsed. */
+  padding: 0 0 0 11px;
+  overflow: hidden;
+  white-space: nowrap;
   box-shadow:
     0 10px 24px rgba(18, 40, 58, 0.3),
     0 2px 6px rgba(18, 40, 58, 0.16);
+}
+
+.kali-fab svg {
+  flex-shrink: 0;
+}
+
+.kali-fab-label {
+  margin-left: 8px;
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #12283a;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* First seconds after opening the app: "Ask Kali" pill, like the website.
+   Anchored on the right, so it shrinks toward the right edge. */
+.kali-fab.expanded {
+  width: 132px;
+}
+
+.kali-fab.expanded .kali-fab-label {
+  opacity: 1;
+  transition-delay: 0.1s;
+}
+
+.kali-fab {
+  transition:
+    width 0.35s ease,
+    transform 0.25s ease,
+    opacity 0.25s ease;
+}
+
+.kali-fab.tucked {
+  transform: translateX(40px);
+  opacity: 0.55;
 }
 
 /* One-time hint bubble above the button. */
@@ -90,5 +133,9 @@
 @media (prefers-reduced-motion: reduce) {
   .kali-hint {
     animation: none;
+  }
+  .kali-fab,
+  .kali-fab-label {
+    transition: none;
   }
 }
