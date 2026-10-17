@@ -5,7 +5,7 @@
 // a full-width Add to Cart button. Shared by Home and Products so both
 // stay visually identical.
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { IonIcon, useIonToast } from "@ionic/react";
 import { heart, heartOutline, cartOutline } from "ionicons/icons";
 import { doc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
@@ -64,6 +64,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const [presentToast] = useIonToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { addItem } = useCart();
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [addLoading, setAddLoading] = useState(false);
@@ -101,7 +102,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       const access = await canAddToCart();
       if (access === "guest") {
         presentToast({ message: "Please sign in to add items to your cart.", duration: 2500, color: "warning" });
-        navigate("/login");
+        navigate("/login", { state: { from: location.pathname + location.search } });
         return;
       }
       if (access === "staff") {

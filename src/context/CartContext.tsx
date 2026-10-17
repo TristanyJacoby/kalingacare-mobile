@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../firebase';
+import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import { validatePromoCode, computeDiscount, PromoCode } from '../utils/promoCodes';
 
 export interface CartItem {
@@ -37,9 +38,11 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
-// The cart is saved on the phone per account, so it survives closing the
-// app and a different person signing in on the same phone doesn't inherit
-// it. (Only signed-in users can add to cart; see utils/cartGuard.ts.)
+// The cart belongs to the account: it's saved on users/{uid}.cart in
+// Firestore, shared with the website, as { id, name, price, qty } (web's
+// "qty"; no photos, those are large and live on the product). A copy is
+// kept on the phone per account so the cart shows instantly and survives
+// closing the app. (Only signed-in users can add to cart; cartGuard.ts.)
 const cartKey = (uid: string) => `kalingacare_cart_${uid}`;
 
 function loadSavedCart(uid: string): CartItem[] {
@@ -65,22 +68,141 @@ function saveCart(uid: string, items: CartItem[]) {
   }
 }
 
+interface SyncedItem {
+  id: string;
+  name: string;
+  price: number;
+  qty: number;
+}
+
+function toSynced(items: CartItem[]): SyncedItem[] {
+  return items.map((i) => ({
+    id: i.id,
+    name: i.name || '',
+    price: Number(i.price) || 0,
+    qty: Math.max(1, Number(i.quantity) || 1),
+  }));
+}
+
+// Account cart → phone cart, keeping photos and checkbox state we have.
+function fromSynced(remote: SyncedItem[], current: CartItem[]): CartItem[] {
+  return remote.map((r) => {
+    const known = current.find((c) => c.id === r.id);
+    return {
+      id: r.id,
+      name: r.name,
+      price: Number(r.price) || 0,
+      quantity: Math.max(1, Number(r.qty) || 1),
+      img: known?.img,
+      selected: known ? known.selected : true,
+    };
+  });
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   // Whose cart is loaded; null while signed out.
   const ownerRef = useRef<string | null>(null);
+  const itemsRef = useRef<CartItem[]>([]);
+  itemsRef.current = items;
+  // What the account holds as far as we know (JSON of the synced shape),
+  // so applying it doesn't write it straight back.
+  const lastSyncedRef = useRef('[]');
+  const pendingRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  useEffect(
-    () =>
-      onAuthStateChanged(auth, (user) => {
-        ownerRef.current = user?.uid ?? null;
-        setItems(user ? loadSavedCart(user.uid) : []);
+  // Product photos for items that came from the account (or the website).
+  const fillPhotos = async (list: CartItem[]) => {
+    const missing = list.filter((i) => !i.img);
+    if (!missing.length) return;
+    const photos: Record<string, string> = {};
+    await Promise.all(
+      missing.map(async (i) => {
+        try {
+          const snap = await getDoc(doc(db, 'products', i.id));
+          const data = snap.exists() ? snap.data() : null;
+          if (data?.imgBase64 || data?.img) photos[i.id] = data.imgBase64 || data.img;
+        } catch {
+          // No photo: the Cart screen shows a placeholder.
+        }
       }),
-    [],
-  );
+    );
+    if (Object.keys(photos).length) {
+      setItems((prev) => prev.map((i) => (!i.img && photos[i.id] ? { ...i, img: photos[i.id] } : i)));
+    }
+  };
 
   useEffect(() => {
-    if (ownerRef.current) saveCart(ownerRef.current, items);
+    let unsubCart: (() => void) | null = null;
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      unsubCart?.();
+      unsubCart = null;
+      clearTimeout(timerRef.current);
+      pendingRef.current = false;
+      ownerRef.current = user?.uid ?? null;
+      if (!user) {
+        lastSyncedRef.current = '[]';
+        setItems([]);
+        return;
+      }
+      const cached = loadSavedCart(user.uid);
+      // Until the account answers, treat the cached copy as already synced.
+      lastSyncedRef.current = JSON.stringify(toSynced(cached));
+      setItems(cached);
+      let first = true;
+      unsubCart = onSnapshot(
+        doc(db, 'users', user.uid),
+        (snap) => {
+          const remote = snap.exists() ? snap.data().cart : undefined;
+          if (!Array.isArray(remote)) {
+            // First time this account uses the shared cart: upload ours.
+            if (first && itemsRef.current.length) {
+              lastSyncedRef.current = '[]';
+              setItems((prev) => [...prev]);
+            }
+            first = false;
+            return;
+          }
+          first = false;
+          if (pendingRef.current) return;
+          const remoteJson = JSON.stringify(toSynced(fromSynced(remote, [])));
+          lastSyncedRef.current = remoteJson;
+          if (remoteJson !== JSON.stringify(toSynced(itemsRef.current))) {
+            const next = fromSynced(remote, itemsRef.current);
+            setItems(next);
+            fillPhotos(next);
+          }
+        },
+        (err) => console.warn("Couldn't load the cart from your account:", err),
+      );
+      fillPhotos(cached);
+    });
+    return () => {
+      unsubAuth();
+      unsubCart?.();
+      clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  // Save on the phone, and to the account when the cart really changed.
+  useEffect(() => {
+    const uid = ownerRef.current;
+    if (!uid) return;
+    saveCart(uid, items);
+    const json = JSON.stringify(toSynced(items));
+    if (json === lastSyncedRef.current) return;
+    pendingRef.current = true;
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      updateDoc(doc(db, 'users', uid), { cart: JSON.parse(json) })
+        .then(() => {
+          lastSyncedRef.current = json;
+        })
+        .catch((err) => console.warn("Couldn't save the cart to your account:", err))
+        .finally(() => {
+          pendingRef.current = false;
+        });
+    }, 300);
   }, [items]);
 
   const addItem: CartContextValue['addItem'] = (item, quantity = 1) => {

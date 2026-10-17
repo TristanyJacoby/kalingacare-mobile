@@ -27,6 +27,7 @@ import MeetTheTeam from './pages/MeetTheTeam';
 import CompanyHistory from './pages/CompanyHistory';
 import KaliChat from './pages/KaliChat';
 import KaliFab from './components/KaliFab';
+import OfflineBanner from './components/OfflineBanner';
 import { ChatProvider } from './context/ChatContext';
 //TBC
 import Favorites from './pages/Favorites';
@@ -91,6 +92,7 @@ const App: React.FC = () => {
       <ChatProvider>
       <IonReactRouter>
         <SideMenu />
+        <OfflineBanner />
         <KaliFab />
         <KaliChat />
         <IonTabs>

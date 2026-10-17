@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   IonPage,
@@ -7,6 +7,8 @@ import {
   IonSpinner,
   useIonToast,
   useIonAlert,
+  IonRefresher,
+  IonRefresherContent,
 } from "@ionic/react";
 import { arrowBackOutline, carOutline, chevronUpOutline } from "ionicons/icons";
 import {
@@ -14,6 +16,7 @@ import {
   query,
   where,
   getDocs,
+  onSnapshot,
   doc,
   updateDoc,
 } from "firebase/firestore";
@@ -127,6 +130,12 @@ const MyOrders: React.FC = () => {
     });
   };
 
+  // Live: a status change made by staff on the website shows up here on
+  // its own. Pull-to-refresh re-subscribes (a fresh fetch from the
+  // server) and re-checks which items were already reviewed.
+  const [refreshKey, setRefreshKey] = useState(0);
+  const refresherRef = useRef<HTMLIonRefresherElement | null>(null);
+
   useEffect(() => {
     const user = auth.currentUser;
     if (!user) {
@@ -134,54 +143,55 @@ const MyOrders: React.FC = () => {
       return;
     }
 
-    (async () => {
-      try {
-        const q = query(
-          collection(db, "orders"),
-          where("userId", "==", user.uid),
-        );
-        const snap = await getDocs(q);
+    const q = query(collection(db, "orders"), where("userId", "==", user.uid));
+    const unsubscribe = onSnapshot(
+      q,
+      (snap) => {
         const fetchedOrders = snap.docs.map((d) => ({
           id: d.id,
           ...(d.data() as Omit<Order, "id">),
         }));
-        // Sort newest first in app code instead of asking Firestore to do
-        // it, since orders without a createdAt yet (rare, but possible
-        // right after placing one) are pushed to the end instead of
-        // breaking the sort.
+        // Newest first, sorted here (not by Firestore): orders without a
+        // createdAt yet (right after placing one) go to the end.
         fetchedOrders.sort((a, b) => {
           const aTime = a.createdAt?.toDate().getTime() ?? 0;
           const bTime = b.createdAt?.toDate().getTime() ?? 0;
           return bTime - aTime;
         });
         setOrders(fetchedOrders);
-
-        // Find which order+product combos already have a review from this
-        // user, so the buttons below can reflect that correctly.
-        const reviewsQ = query(
-          collection(db, "reviews"),
-          where("userId", "==", user.uid),
-        );
-        const reviewsSnap = await getDocs(reviewsQ);
-        const keys = new Set(
-          reviewsSnap.docs.map((d) => {
-            const data = d.data();
-            return `${data.orderId}:${data.productId}`;
-          }),
-        );
-        setReviewedKeys(keys);
-      } catch (err) {
+        setLoading(false);
+        refresherRef.current?.complete();
+      },
+      (err) => {
         console.error("MyOrders fetch failed:", err);
-        setOrders([]);
+        setLoading(false);
+        refresherRef.current?.complete();
         presentToast({
-          message: "Could not load your orders. Please try again.",
+          message: "Could not load your orders. Pull down to try again.",
           duration: 2500,
           color: "danger",
         });
-      }
-      setLoading(false);
-    })();
-  }, [navigate]);
+      },
+    );
+
+    // Which order+product combos this user already reviewed.
+    getDocs(query(collection(db, "reviews"), where("userId", "==", user.uid)))
+      .then((reviewsSnap) =>
+        setReviewedKeys(
+          new Set(
+            reviewsSnap.docs.map((d) => {
+              const data = d.data();
+              return `${data.orderId}:${data.productId}`;
+            }),
+          ),
+        ),
+      )
+      .catch((err) => console.error("Couldn't load your reviews:", err));
+
+    return () => unsubscribe();
+    // presentToast is stable enough; re-running on it would resubscribe.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, refreshKey]);
 
   const confirmCancel = (orderId: string) => {
     presentAlert({
@@ -220,6 +230,9 @@ const MyOrders: React.FC = () => {
   return (
     <IonPage>
       <IonContent fullscreen className="orders-content">
+        <IonRefresher slot="fixed" ref={refresherRef} onIonRefresh={() => setRefreshKey((k) => k + 1)}>
+          <IonRefresherContent />
+        </IonRefresher>
         <div className="orders-topbar">
           <button
             className="orders-icon-btn"

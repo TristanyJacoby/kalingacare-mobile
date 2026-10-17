@@ -222,3 +222,23 @@
   gap: 13px;
   padding: 0 20px 32px;
 }
+
+/* Products failed to load (Home / Categories) */
+.shop-load-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.shop-retry-btn {
+  border: none;
+  border-radius: 999px;
+  background: #1778ad;
+  color: #ffffff;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 9px 22px;
+}

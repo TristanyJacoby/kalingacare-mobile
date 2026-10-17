@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { IonPage, IonContent, IonIcon, useIonToast } from "@ionic/react";
 import { mailOutline, lockClosedOutline } from "ionicons/icons";
 import {
@@ -18,6 +18,11 @@ import "./Auth.css";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  // Where to go after signing in: back to the screen that sent the guest
+  // here (e.g. a product they tried to add to cart), otherwise Home.
+  const from = (location.state as { from?: string } | null)?.from;
+  const afterSignIn = from && from.startsWith("/") && !from.startsWith("/login") ? from : "/home";
   const [presentToast] = useIonToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -81,7 +86,7 @@ const Login: React.FC = () => {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate("/home");
+      navigate(afterSignIn, { replace: true });
     } catch (err: any) {
       presentToast({
         message: friendlyAuthError(err?.code),
@@ -97,7 +102,7 @@ const Login: React.FC = () => {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      navigate("/home");
+      navigate(afterSignIn, { replace: true });
     } catch (err: any) {
       // User backing out of the account picker isn't a real error.
       if (!isGoogleSignInCancel(err)) {

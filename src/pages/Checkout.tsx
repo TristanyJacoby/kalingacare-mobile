@@ -11,7 +11,7 @@ import {
   cashOutline,
   shieldCheckmarkOutline,
 } from 'ionicons/icons';
-import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { sendVerificationEmail, TooSoonError } from '../utils/verification';
 import { auth, db } from '../firebase';
 import { useCart } from '../context/CartContext';
@@ -25,6 +25,9 @@ import {
 import './Auth.css';
 import './Cart.css';
 import AddressMapPicker from '../components/AddressMapPicker';
+
+// Orders are created by the website's server for both apps.
+const PLACE_ORDER_URL = 'https://kalingacare-drab.vercel.app/api/place-order';
 import './Checkout.css';
 
 // Mirrors js/site.js exactly — same flat shipping fee the web app uses.
@@ -150,45 +153,36 @@ const Checkout: React.FC = () => {
     const payOnlineNow = paymentMethod === 'online';
     let orderId: string | null = null;
     try {
-      // Mirrors js/checkout.js's addDoc call field-for-field, including the
-      // "qty" key (web's CartItem shape), so orders created on mobile look
-      // identical to web-created ones in Admin Orders / Admin Dashboard.
-      // Only the items the user checked in Cart are included here.
-      const orderRef = await addDoc(collection(db, 'orders'), {
-        userId: user.uid,
-        items: selectedItems.map((item) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          qty: item.quantity,
-        })),
-        subtotal: selectedSubtotal,
-        shippingFee: SHIPPING_FEE,
-        promoCode: appliedPromo?.code ?? null,
-        discount: discountAmount,
-        total: selectedSubtotal + SHIPPING_FEE - discountAmount,
-        status: 'New',
-        shippingInfo: {
-          fullName,
-          email,
-          recipient: recipientName,
-          address,
-          phone: contactNumber,
-          // Short code, same as web ("cod" / "online"); Admin maps it to a label.
-          paymentMethod,
-          lat: savedCoords.lat,
-          lng: savedCoords.lng,
+      // The website's server creates the order (api/place-order.js) and
+      // works out names, prices, the promo discount and the total from the
+      // product records, so they can't be tampered with in the app. Only
+      // the items checked in Cart are sent.
+      const res = await fetch(PLACE_ORDER_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${await user.getIdToken()}`,
         },
-        // What currency the buyer was viewing at order time — display
-        // only, not a real multi-currency charge. The real total above
-        // is always PHP.
-        displayCurrency,
-        // Online orders start unpaid; only the server marks them "paid"
-        // after PayMongo confirms the payment.
-        ...(payOnlineNow ? { paymentStatus: 'pending' } : {}),
-        createdAt: serverTimestamp(),
+        body: JSON.stringify({
+          items: selectedItems.map((item) => ({ id: item.id, qty: item.quantity })),
+          promoCode: appliedPromo?.code ?? null,
+          paymentMethod,
+          displayCurrency,
+          shippingInfo: {
+            fullName,
+            email,
+            recipient: recipientName,
+            address,
+            phone: contactNumber,
+            lat: savedCoords.lat,
+            lng: savedCoords.lng,
+          },
+        }),
       });
-      orderId = orderRef.id;
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not place your order. Please try again.');
+      orderId = data.orderId as string;
+      const orderRef = { id: orderId };
 
       // Only remove the items that were actually ordered — anything left
       // unselected in the cart should still be there afterward.
@@ -223,9 +217,12 @@ const Checkout: React.FC = () => {
         navigate('/orders');
         return;
       }
+      // Server messages (e.g. an invalid promo code) are shown as-is;
+      // network failures get the generic message.
+      const serverMessage = err instanceof Error && !(err instanceof TypeError) ? err.message : '';
       presentToast({
-        message: "Something went wrong placing your order. Please try again.",
-        duration: 2500,
+        message: serverMessage || "Something went wrong placing your order. Please try again.",
+        duration: 3000,
         color: 'danger',
       });
     } finally {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { IonPage, IonContent, IonIcon } from "@ionic/react";
+import { IonPage, IonContent, IonIcon, useIonToast } from "@ionic/react";
 import {
   notificationsOutline,
   personOutline,
@@ -48,6 +48,7 @@ function initials(name: string) {
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
+  const [presentToast] = useIonToast();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("user");
@@ -122,8 +123,11 @@ const Profile: React.FC = () => {
       // Update what's shown right away, without needing to reload the page.
       setPhotoBase64(croppedDataUrl);
     } catch {
-      // Keep this simple — a failed avatar upload isn't critical enough to
-      // need a fancy error screen, just quietly stop the loading spinner.
+      presentToast({
+        message: "Couldn't save your photo. Please try again.",
+        duration: 2500,
+        color: "danger",
+      });
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";

@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { IonContent, IonPage, IonIcon, IonSpinner, IonMenuButton } from "@ionic/react";
+import { IonContent, IonPage, IonIcon, IonSpinner, IonMenuButton, IonRefresher, IonRefresherContent } from "@ionic/react";
 import { searchOutline, cartOutline, menuOutline } from "ionicons/icons";
 import { collection, query, orderBy, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
@@ -18,6 +18,12 @@ const Products: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState<CardProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  // Pull-to-refresh re-subscribes to the product list (a fresh fetch from
+  // the server); the list also updates live on its own.
+  const [refreshKey, setRefreshKey] = useState(0);
+  const refresherRef = useRef<HTMLIonRefresherElement | null>(null);
+  const finishRefresh = () => refresherRef.current?.complete();
   const [searchText, setSearchText] = useState(searchParams.get("q") ?? "");
   const [activeCategory, setActiveCategory] = useState<string>(searchParams.get("category") ?? "All");
 
@@ -57,16 +63,27 @@ const Products: React.FC = () => {
   useEffect(() => {
     // Live subscription — same idea as the web app's products.js onSnapshot.
     const q = query(collection(db, "products"), orderBy("name"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const list: CardProduct[] = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as Omit<CardProduct, "id">),
-      }));
-      setProducts(list);
-      setLoading(false);
-    });
+    setLoadError(false);
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const list: CardProduct[] = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as Omit<CardProduct, "id">),
+        }));
+        setProducts(list);
+        setLoading(false);
+        finishRefresh();
+      },
+      (err) => {
+        console.error("Products failed to load:", err);
+        setLoading(false);
+        setLoadError(true);
+        finishRefresh();
+      },
+    );
     return () => unsubscribe();
-  }, []);
+  }, [refreshKey]);
 
   // Reflects new ?q= / ?category= params if Home links here again while
   // this tab is already mounted (e.g. tapping a different category pill).
@@ -97,6 +114,13 @@ const Products: React.FC = () => {
   return (
     <IonPage>
       <IonContent fullscreen className="shop-content">
+        <IonRefresher
+          slot="fixed"
+          ref={refresherRef}
+          onIonRefresh={() => setRefreshKey((k) => k + 1)}
+        >
+          <IonRefresherContent />
+        </IonRefresher>
         <div className="shop-header">
           <IonMenuButton className="shop-menu-btn" aria-label="Menu">
             <IonIcon icon={menuOutline} />
@@ -150,7 +174,16 @@ const Products: React.FC = () => {
           </div>
         )}
 
-        {!loading && visibleProducts.length === 0 && (
+        {!loading && loadError && (
+          <div className="shop-empty shop-load-error">
+            Couldn&apos;t load products. Check your connection, then pull down to try again.
+            <button className="shop-retry-btn" onClick={() => setRefreshKey((k) => k + 1)}>
+              Try again
+            </button>
+          </div>
+        )}
+
+        {!loading && !loadError && visibleProducts.length === 0 && (
           <div className="shop-empty">No products found.</div>
         )}
 

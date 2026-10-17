@@ -91,6 +91,9 @@ const SavedAddresses: React.FC = () => {
             address: legacy.address || "",
             phone: legacy.phone || "",
             isDefault: true,
+            // Keep the map pin set on the website.
+            lat: legacy.lat ?? null,
+            lng: legacy.lng ?? null,
           },
         ];
         setAddresses(converted);
@@ -110,7 +113,15 @@ const SavedAddresses: React.FC = () => {
   const persist = async (updated: Address[]) => {
     const user = auth.currentUser;
     if (!user) return;
-    await updateDoc(doc(db, "users", user.uid), { savedAddresses: updated });
+    // Also keep the old single `savedAddress` = the default entry (the
+    // website writes both too), for older copies of either app.
+    const def = updated.find((a) => a.isDefault) || updated[0];
+    await updateDoc(doc(db, "users", user.uid), {
+      savedAddresses: updated,
+      savedAddress: def
+        ? { recipient: def.recipient, address: def.address, phone: def.phone, lat: def.lat ?? null, lng: def.lng ?? null }
+        : null,
+    });
     setAddresses(updated);
   };
 

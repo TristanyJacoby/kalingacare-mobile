@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { IonPage, IonContent, IonFooter, IonToolbar, IonIcon, IonSpinner, useIonToast } from '@ionic/react';
 import { arrowBackOutline, cartOutline, star, starOutline, starHalf, heart, heartOutline } from 'ionicons/icons';
 import {
@@ -81,6 +81,7 @@ function StarRow({ value }: { value: number }) {
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { addItem, productCount } = useCart();
   const [presentToast] = useIonToast();
   const [product, setProduct] = useState<Product | null>(null);
@@ -243,7 +244,7 @@ const ProductDetail: React.FC = () => {
         duration: 2500,
         color: 'warning',
       });
-      navigate('/login');
+      navigate('/login', { state: { from: location.pathname + location.search } });
       return;
     }
     if (access === 'staff') {
