@@ -52,6 +52,10 @@ const Checkout: React.FC = () => {
   const [recipientName, setRecipientName] = useState('');
   const [address, setAddress] = useState('');
   const [contactNumber, setContactNumber] = useState('');
+  const [driverNote, setDriverNote] = useState('');
+  // Saved addresses to pick from; 'other' = someone not saved (map only).
+  const [savedList, setSavedList] = useState<any[]>([]);
+  const [addressChoice, setAddressChoice] = useState('');
   const [savedCoords, setSavedCoords] = useState<{ lat: number | null; lng: number | null }>({
     lat: null,
     lng: null,
@@ -119,6 +123,11 @@ const Checkout: React.FC = () => {
       const addressList = data?.savedAddresses;
       const defaultAddress = addressList?.find((a: any) => a.isDefault) || addressList?.[0];
 
+      if (Array.isArray(addressList) && addressList.length > 0) {
+        setSavedList(addressList);
+        setAddressChoice(defaultAddress.id);
+      }
+
       if (defaultAddress) {
         setRecipientName(defaultAddress.recipient || '');
         setAddress(defaultAddress.address || '');
@@ -139,6 +148,25 @@ const Checkout: React.FC = () => {
       setCheckingAccess(false);
     })();
   }, [navigate]);
+
+  const chooseAddress = (id: string) => {
+    setAddressChoice(id);
+    if (id === 'other') {
+      setRecipientName('');
+      setAddress('');
+      setContactNumber('');
+      setSavedCoords({ lat: null, lng: null });
+      return;
+    }
+    const a = savedList.find((x) => x.id === id);
+    if (!a) return;
+    setRecipientName(a.recipient || '');
+    setAddress(a.address || '');
+    setContactNumber(a.phone || '');
+    const start = { lat: a.lat ?? null, lng: a.lng ?? null };
+    setSavedCoords(start);
+    setMapStart(start);
+  };
 
   const handlePlaceOrder = async () => {
     const user = auth.currentUser;
@@ -174,6 +202,7 @@ const Checkout: React.FC = () => {
             recipient: recipientName,
             address,
             phone: contactNumber,
+            note: driverNote.trim(),
             lat: savedCoords.lat,
             lng: savedCoords.lng,
           },
@@ -394,6 +423,25 @@ const Checkout: React.FC = () => {
             <input type="email" className="auth-input" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
 
+          {savedList.length > 0 && (
+            <>
+              <label className="auth-label" htmlFor="deliverTo">Deliver to</label>
+              <select
+                id="deliverTo"
+                className="checkout-currency-select"
+                value={addressChoice}
+                onChange={(e) => chooseAddress(e.target.value)}
+              >
+                {savedList.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {(a.label || 'Address') + ': ' + (a.recipient || '') + ', ' + String(a.address || '').slice(0, 50)}
+                  </option>
+                ))}
+                <option value="other">Someone else (pick on the map)</option>
+              </select>
+            </>
+          )}
+
           <label className="auth-label">Recipient&apos;s Full Name (in the Philippines)</label>
           <div className="auth-input-wrap">
             <IonIcon icon={personOutline} className="auth-input-icon" />
@@ -409,11 +457,11 @@ const Checkout: React.FC = () => {
           <label className="auth-label">Delivery Address</label>
           {/* Same idea as the website's checkout: search, drag the pin or
               tap the map to set where this order goes; the address below
-              fills in and stays editable. Changes apply to this order only,
+              fills in from the map. Changes apply to this order only,
               not to Saved Addresses. */}
           <p className="checkout-map-hint">
-            Search, drag the pin, or tap the map to set the exact spot. You can still edit the
-            address below (unit no., landmark).
+            Search, drag the pin, or tap the map to set the exact spot. The address below fills in
+            from the map.
           </p>
           <AddressMapPicker
             savedLat={mapStart.lat}
@@ -427,12 +475,23 @@ const Checkout: React.FC = () => {
             <IonIcon icon={locationOutline} className="auth-input-icon" />
             <input
               type="text"
-              placeholder="House no., Street, City"
+              placeholder="Pick a location on the map"
               className="auth-input"
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              readOnly
             />
           </div>
+
+          <label className="auth-label" htmlFor="driverNote">Note for the driver (optional)</label>
+          <textarea
+            id="driverNote"
+            className="checkout-note"
+            rows={2}
+            maxLength={300}
+            placeholder="e.g. Blue gate, call when you arrive"
+            value={driverNote}
+            onChange={(e) => setDriverNote(e.target.value)}
+          />
 
           <label className="auth-label">Contact Number</label>
           <div className="auth-input-wrap">

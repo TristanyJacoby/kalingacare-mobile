@@ -102,3 +102,16 @@
   margin: -4px 0 8px;
   line-height: 1.45;
 }
+
+.checkout-note {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid #dce8f0;
+  background: #ffffff;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
+  color: #1e293b;
+  resize: none;
+  box-sizing: border-box;
+}
