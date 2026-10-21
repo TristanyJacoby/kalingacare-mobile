@@ -115,3 +115,12 @@
   resize: none;
   box-sizing: border-box;
 }
+
+.auth-input-wrap:has(.checkout-address-display) {
+  background: #eef5fb;
+}
+
+.checkout-address-display {
+  cursor: default;
+  user-select: none;
+}

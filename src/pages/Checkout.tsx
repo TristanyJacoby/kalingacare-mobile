@@ -434,7 +434,7 @@ const Checkout: React.FC = () => {
               >
                 {savedList.map((a) => (
                   <option key={a.id} value={a.id}>
-                    {(a.label || 'Address') + ': ' + (a.recipient || '') + ', ' + String(a.address || '').slice(0, 50)}
+                    {(a.label || 'Address') + ': ' + (a.recipient || '')}
                   </option>
                 ))}
                 <option value="other">Someone else (pick on the map)</option>
@@ -476,9 +476,10 @@ const Checkout: React.FC = () => {
             <input
               type="text"
               placeholder="Pick a location on the map"
-              className="auth-input"
+              className="auth-input checkout-address-display"
               value={address}
               readOnly
+              tabIndex={-1}
             />
           </div>
 
@@ -488,7 +489,6 @@ const Checkout: React.FC = () => {
             className="checkout-note"
             rows={2}
             maxLength={300}
-            placeholder="e.g. Blue gate, call when you arrive"
             value={driverNote}
             onChange={(e) => setDriverNote(e.target.value)}
           />
