@@ -28,6 +28,14 @@ interface BannerSlide {
 // gets added later.
 const FEATURED_COUNT = 4;
 
+// Homepage content set on the website (Admin > Content): the announcement
+// strip, the sliding banners and which products are featured.
+interface HomeContent {
+  announcement?: { enabled?: boolean; text?: string; linkLabel?: string };
+  banners?: { title: string; subtitle?: string; code?: string }[];
+  featuredIds?: string[];
+}
+
 // "How It Works" — shortened to a compact strip so products lead the page.
 const HOW_IT_WORKS = [
   { icon: searchOutline, title: "Browse", desc: "Find care essentials" },
@@ -48,6 +56,12 @@ const Home: React.FC = () => {
   const refresherRef = useRef<HTMLIonRefresherElement | null>(null);
   const finishRefresh = () => refresherRef.current?.complete();
   const [searchText, setSearchText] = useState("");
+  const [homeContent, setHomeContent] = useState<HomeContent>({});
+  useEffect(() => {
+    getDoc(doc(db, "content", "home"))
+      .then((snap) => setHomeContent(snap.exists() ? (snap.data() as HomeContent) : {}))
+      .catch(() => setHomeContent({}));
+  }, []);
 
   const [userName, setUserName] = useState("");
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
@@ -122,7 +136,14 @@ const Home: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  const featuredProducts = useMemo(() => products.slice(0, FEATURED_COUNT), [products]);
+  const featuredProducts = useMemo(() => {
+    const ids = homeContent.featuredIds || [];
+    if (ids.length) {
+      const picked = ids.map((id) => products.find((p) => p.id === id)).filter((p): p is CardProduct => !!p);
+      if (picked.length) return picked;
+    }
+    return products.slice(0, FEATURED_COUNT);
+  }, [products, homeContent]);
 
   const goToProducts = (params?: { q?: string; category?: string }) => {
     const search = new URLSearchParams();
@@ -142,7 +163,20 @@ const Home: React.FC = () => {
   };
 
   const slides: BannerSlide[] = useMemo(
-    () => [
+    () => {
+      const custom = (homeContent.banners || []).filter((b) => b.title);
+      if (custom.length) {
+        return custom.map((b, i) => ({
+          key: `banner-${i}`,
+          title: b.title,
+          subtitle: b.subtitle || "",
+          cta: b.code
+            ? { label: "Copy Code", onClick: () => handleCopyCode(b.code as string) }
+            : { label: "Shop Now", onClick: () => goToProducts() },
+          code: b.code || undefined,
+        }));
+      }
+      return [
       {
         key: "brand",
         title: "Care Beyond Borders",
@@ -163,9 +197,10 @@ const Home: React.FC = () => {
         cta: { label: "Copy Code", onClick: () => handleCopyCode("CARE50") },
         code: "CARE50",
       },
-    ],
+      ];
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [homeContent],
   );
 
   // Tracks whether the *next* activeSlide change should trigger our own
@@ -319,6 +354,12 @@ const Home: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {homeContent.announcement?.enabled && homeContent.announcement.text && (
+          <div className="home-announcement" role="status">
+            {homeContent.announcement.text}
+          </div>
+        )}
 
         {userName && (
           <div className="home-greeting">

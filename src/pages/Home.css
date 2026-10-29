@@ -238,3 +238,14 @@
 .home-how-item .home-step-icon {
   margin: 0 auto 8px;
 }
+
+.home-announcement {
+  margin: 0 16px 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #1778ad;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
