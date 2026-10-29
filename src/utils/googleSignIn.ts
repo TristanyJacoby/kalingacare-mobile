@@ -72,6 +72,9 @@ export function isGoogleSignInCancel(err: any): boolean {
 // message (same lesson as web's Google Sign-In debugging).
 export function googleSignInErrorMessage(err: any): string {
   console.error("Google Sign-In failed:", err);
+  if (err?.code === "auth/user-disabled") {
+    return "This account has been suspended. Please contact kalingacaresupport@gmail.com.";
+  }
   const detail = err?.code || err?.message || "unknown error";
   return `Couldn't sign in with Google (${detail}).`;
 }

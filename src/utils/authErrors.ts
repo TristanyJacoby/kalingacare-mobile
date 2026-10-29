@@ -12,6 +12,8 @@ export function friendlyAuthError(code?: string): string {
       return "An account already exists with this email.";
     case "auth/weak-password":
       return "Password should be at least 6 characters.";
+    case "auth/user-disabled":
+      return "This account has been suspended. Please contact kalingacaresupport@gmail.com.";
     default:
       return "Something went wrong. Please try again.";
   }

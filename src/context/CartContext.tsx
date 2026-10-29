@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { validatePromoCode, computeDiscount, PromoCode } from '../utils/promoCodes';
@@ -167,6 +167,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       unsubCart = onSnapshot(
         doc(db, 'users', user.uid),
         (snap) => {
+          // A Super Admin suspended this account: sign out right away.
+          if (snap.exists() && snap.data().disabled === true) {
+            signOut(auth);
+            return;
+          }
           const remote = snap.exists() ? snap.data().cart : undefined;
           if (!Array.isArray(remote)) {
             // First time this account uses the shared cart: upload ours.
