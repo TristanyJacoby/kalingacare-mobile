@@ -56,7 +56,7 @@ const Favorites: React.FC = () => {
       // Step 3: keep only products that still exist — a product might have
       // been deleted from the catalog after someone favorited it.
       const loaded: CardProduct[] = productDocs
-        .filter((snap) => snap.exists())
+        .filter((snap) => snap.exists() && snap.data()?.status !== "inactive")
         .map((snap) => ({
           id: snap.id,
           ...(snap.data() as Omit<CardProduct, "id">),

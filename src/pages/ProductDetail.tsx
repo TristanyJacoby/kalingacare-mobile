@@ -104,7 +104,8 @@ const ProductDetail: React.FC = () => {
     if (!id) return;
     (async () => {
       const snap = await getDoc(doc(db, 'products', id));
-      if (snap.exists()) {
+      // Products staff marked inactive are hidden from the store.
+      if (snap.exists() && snap.data().status !== 'inactive') {
         setProduct({ id: snap.id, ...(snap.data() as Omit<Product, 'id'>) });
       }
       setLoading(false);
@@ -177,6 +178,7 @@ const ProductDetail: React.FC = () => {
         );
         const snap = await getDocs(q);
         const list = snap.docs
+          .filter((d) => d.data().status !== 'inactive')
           .map((d) => ({ id: d.id, ...(d.data() as Omit<RelatedProduct, 'id'>) }))
           .filter((p) => p.id !== product.id)
           .slice(0, 6);

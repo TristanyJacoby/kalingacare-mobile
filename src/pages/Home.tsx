@@ -81,10 +81,13 @@ const Home: React.FC = () => {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const list: CardProduct[] = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as Omit<CardProduct, "id">),
-        }));
+        // Products staff marked inactive are hidden from the store.
+        const list: CardProduct[] = snapshot.docs
+          .filter((doc) => doc.data().status !== "inactive")
+          .map((doc) => ({
+            id: doc.id,
+            ...(doc.data() as Omit<CardProduct, "id">),
+          }));
         setProducts(list);
         setLoading(false);
         finishRefresh();

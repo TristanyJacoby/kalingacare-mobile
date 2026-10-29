@@ -58,7 +58,7 @@ const Cart: React.FC = () => {
     }
     const soldOut = items.find((i) => i.selected && i.stock === 0);
     if (soldOut) {
-      presentToast({ message: `${soldOut.name} is out of stock. Remove it to check out.`, duration: 2600, color: 'warning' });
+      presentToast({ message: `${soldOut.name} isn't available right now. Remove it to check out.`, duration: 2600, color: 'warning' });
       return;
     }
     navigate('/checkout');
@@ -151,7 +151,7 @@ const Cart: React.FC = () => {
                   </button>
                 </div>
                 {item.stock === 0 ? (
-                  <p className="cart-stock-note cart-stock-out">Out of stock. Remove it to check out.</p>
+                  <p className="cart-stock-note cart-stock-out">Not available right now. Remove it to check out.</p>
                 ) : item.stock !== undefined && item.quantity >= item.stock ? (
                   <p className="cart-stock-note">Only {item.stock} in stock</p>
                 ) : null}

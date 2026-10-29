@@ -41,6 +41,7 @@ export function getCatalog(): Promise<string> {
     catalogPromise = getDocs(query(collection(db, 'products'), limit(CHAT_CATALOG_MAX_ITEMS)))
       .then((snap) =>
         snap.docs
+          .filter((d) => d.data().status !== 'inactive')
           .map((d) => {
             const p = d.data();
             return `${d.id} | ${clean(p.name)} | ${clean(p.category)} | ${clean(p.price)}`;

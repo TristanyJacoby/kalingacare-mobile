@@ -130,7 +130,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
             return;
           }
           if (!i.img && (data.imgBase64 || data.img)) photos[i.id] = data.imgBase64 || data.img;
-          if (typeof data.stock === 'number') stocks[i.id] = Math.max(0, data.stock);
+          if (data.status === 'inactive') stocks[i.id] = 0; // hidden by staff: can't be bought
+          else if (typeof data.stock === 'number') stocks[i.id] = Math.max(0, data.stock);
         } catch {
           // No photo or stock: placeholder image, quantity not limited here.
         }
