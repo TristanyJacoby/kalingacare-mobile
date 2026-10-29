@@ -1,12 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IonPage, IonContent, IonFooter, IonToolbar, IonIcon, useIonToast } from '@ionic/react';
 import { arrowBackOutline, checkmarkCircle, ellipseOutline } from 'ionicons/icons';
 import { useCart } from '../context/CartContext';
+import { DEFAULT_STORE_SETTINGS, getStoreSettings, shippingFor, type StoreSettings } from '../utils/storeSettings';
 import './Cart.css';
-
-// Mirrors js/site.js exactly — same flat shipping fee the web app uses.
-const SHIPPING_FEE = 150;
 
 function peso(amount: number) {
   return '₱' + amount.toLocaleString('en-PH');
@@ -24,6 +22,11 @@ function placeholderImg() {
 const Cart: React.FC = () => {
   const navigate = useNavigate();
   const [presentToast] = useIonToast();
+  // Shipping fee and free-shipping rule from the store settings (Admin > Settings).
+  const [storeSettings, setStoreSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
+  useEffect(() => {
+    getStoreSettings().then(setStoreSettings);
+  }, []);
   const {
     items,
     updateQuantity,
@@ -50,6 +53,7 @@ const Cart: React.FC = () => {
   };
 
   const allSelected = items.length > 0 && items.every((i) => i.selected);
+  const shipping = shippingFor(selectedSubtotal, storeSettings);
 
   const handleCheckout = () => {
     if (selectedCount === 0) {
@@ -192,7 +196,7 @@ const Cart: React.FC = () => {
           </div>
           <div className="cart-summary-row">
             <span>Shipping</span>
-            <span className="cart-summary-value">{peso(SHIPPING_FEE)}</span>
+            <span className="cart-summary-value">{shipping === 0 ? 'Free' : peso(shipping)}</span>
           </div>
           {discountAmount > 0 && (
             <div className="cart-summary-row cart-summary-discount">
@@ -204,7 +208,7 @@ const Cart: React.FC = () => {
           <div className="cart-summary-row cart-summary-total">
             <span>Total</span>
             <span className="cart-summary-value cart-summary-total-value">
-              {peso(selectedSubtotal + SHIPPING_FEE - discountAmount)}
+              {peso(selectedSubtotal + shipping - discountAmount)}
             </span>
           </div>
         </div>

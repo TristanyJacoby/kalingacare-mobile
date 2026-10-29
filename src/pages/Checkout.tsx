@@ -16,6 +16,7 @@ import { sendVerificationEmail, TooSoonError } from '../utils/verification';
 import { auth, db } from '../firebase';
 import { useCart } from '../context/CartContext';
 import { payOnline } from '../utils/payments';
+import { DEFAULT_STORE_SETTINGS, getStoreSettings, shippingFor, type StoreSettings } from '../utils/storeSettings';
 import {
   getRates,
   convertAndFormat,
@@ -29,9 +30,6 @@ import AddressMapPicker from '../components/AddressMapPicker';
 // Orders are created by the website's server for both apps.
 const PLACE_ORDER_URL = 'https://kalingacare-drab.vercel.app/api/place-order';
 import './Checkout.css';
-
-// Mirrors js/site.js exactly — same flat shipping fee the web app uses.
-const SHIPPING_FEE = 150;
 
 function peso(amount: number) {
   return '₱' + amount.toLocaleString('en-PH');
@@ -68,6 +66,17 @@ const Checkout: React.FC = () => {
     lat: null,
     lng: null,
   });
+  // Shipping fee, free-shipping rule and payment options from the store
+  // settings (Admin > Settings on the website).
+  const [storeSettings, setStoreSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
+  useEffect(() => {
+    getStoreSettings().then((s) => {
+      setStoreSettings(s);
+      // Start on an option that's actually available.
+      setPaymentMethod((current) => (current === 'cod' && !s.codEnabled ? 'online' : current === 'online' && !s.onlineEnabled ? 'cod' : current));
+    });
+  }, []);
+  const shipping = shippingFor(selectedSubtotal, storeSettings);
   const [placing, setPlacing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod');
   const [placingLabel, setPlacingLabel] = useState('Placing Order…');
@@ -510,6 +519,7 @@ const Checkout: React.FC = () => {
               hosted page, which is in test mode: keep the note until real
               payments are activated. */}
           <div role="radiogroup" aria-labelledby="paymentMethodLabel">
+            {storeSettings.codEnabled && (
             <button
               type="button"
               role="radio"
@@ -520,6 +530,8 @@ const Checkout: React.FC = () => {
               <IonIcon icon={cashOutline} className="auth-input-icon" />
               <span className="checkout-payment-label">Cash on Delivery</span>
             </button>
+            )}
+            {storeSettings.onlineEnabled && (
             <button
               type="button"
               role="radio"
@@ -530,6 +542,7 @@ const Checkout: React.FC = () => {
               <IonIcon icon={cardOutline} className="auth-input-icon" />
               <span className="checkout-payment-label">Pay online: card, GCash or Maya</span>
             </button>
+            )}
           </div>
           {paymentMethod === 'online' && (
             <p className="checkout-payment-note">
@@ -550,7 +563,7 @@ const Checkout: React.FC = () => {
           </div>
           <div className="cart-summary-row">
             <span>Shipping</span>
-            <span className="cart-summary-value">{peso(SHIPPING_FEE)}</span>
+            <span className="cart-summary-value">{shipping === 0 ? 'Free' : peso(shipping)}</span>
           </div>
           {discountAmount > 0 && (
             <div className="cart-summary-row cart-summary-discount">
@@ -562,7 +575,7 @@ const Checkout: React.FC = () => {
           <div className="cart-summary-row cart-summary-total">
             <span>Total</span>
             <span className="cart-summary-value cart-summary-total-value">
-              {peso(selectedSubtotal + SHIPPING_FEE - discountAmount)}
+              {peso(selectedSubtotal + shipping - discountAmount)}
             </span>
           </div>
 
@@ -585,7 +598,7 @@ const Checkout: React.FC = () => {
               <p className="checkout-currency-note">
                 ≈{' '}
                 {convertAndFormat(
-                  selectedSubtotal + SHIPPING_FEE - discountAmount,
+                  selectedSubtotal + shipping - discountAmount,
                   displayCurrency,
                   rates.rates,
                 )}{' '}
