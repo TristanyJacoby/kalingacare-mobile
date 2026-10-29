@@ -11,11 +11,14 @@ export interface CartItem {
   img?: string;
   quantity: number;
   selected: boolean;
+  /** Units left on the product (phone only, not synced). Missing = not limited/unknown. */
+  stock?: number;
 }
 
 interface CartContextValue {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, 'quantity' | 'selected'>, quantity?: number) => void;
+  /** Adds up to `quantity` without going past stock; returns how many were added. */
+  addItem: (item: Omit<CartItem, 'quantity' | 'selected'>, quantity?: number) => number;
   removeItem: (id: string) => void;
   removeItems: (ids: string[]) => void;
   updateQuantity: (id: string, quantity: number) => void;
@@ -94,6 +97,7 @@ function fromSynced(remote: SyncedItem[], current: CartItem[]): CartItem[] {
       price: Number(r.price) || 0,
       quantity: Math.max(1, Number(r.qty) || 1),
       img: known?.img,
+      stock: known?.stock,
       selected: known ? known.selected : true,
     };
   });
@@ -111,25 +115,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const pendingRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // Product photos for items that came from the account (or the website).
+  // Looks up each product's current stock, plus photos for items that came
+  // from the account (or the website), and lowers quantities above stock.
   const fillPhotos = async (list: CartItem[]) => {
-    const missing = list.filter((i) => !i.img);
-    if (!missing.length) return;
     const photos: Record<string, string> = {};
+    const stocks: Record<string, number> = {};
     await Promise.all(
-      missing.map(async (i) => {
+      list.map(async (i) => {
         try {
           const snap = await getDoc(doc(db, 'products', i.id));
           const data = snap.exists() ? snap.data() : null;
-          if (data?.imgBase64 || data?.img) photos[i.id] = data.imgBase64 || data.img;
+          if (!data) {
+            stocks[i.id] = 0;
+            return;
+          }
+          if (!i.img && (data.imgBase64 || data.img)) photos[i.id] = data.imgBase64 || data.img;
+          if (typeof data.stock === 'number') stocks[i.id] = Math.max(0, data.stock);
         } catch {
-          // No photo: the Cart screen shows a placeholder.
+          // No photo or stock: placeholder image, quantity not limited here.
         }
       }),
     );
-    if (Object.keys(photos).length) {
-      setItems((prev) => prev.map((i) => (!i.img && photos[i.id] ? { ...i, img: photos[i.id] } : i)));
-    }
+    setItems((prev) =>
+      prev.map((i) => {
+        const stock = i.id in stocks ? stocks[i.id] : i.stock;
+        const quantity = stock !== undefined && stock >= 1 ? Math.min(i.quantity, stock) : i.quantity;
+        return { ...i, img: i.img || photos[i.id], stock, quantity };
+      }),
+    );
   };
 
   useEffect(() => {
@@ -206,18 +219,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items]);
 
   const addItem: CartContextValue['addItem'] = (item, quantity = 1) => {
+    const inCart = itemsRef.current.find((i) => i.id === item.id)?.quantity ?? 0;
+    const limit = typeof item.stock === 'number' ? Math.max(0, item.stock) : Infinity;
+    const added = Math.max(0, Math.min(quantity, limit - inCart));
+    if (added === 0) return 0;
     setItems((prev) => {
       const existing = prev.find((i) => i.id === item.id);
       if (existing) {
         return prev.map((i) =>
-          i.id === item.id ? { ...i, quantity: i.quantity + quantity } : i,
+          i.id === item.id ? { ...i, stock: item.stock ?? i.stock, quantity: i.quantity + added } : i,
         );
       }
       // New items start selected — matches the usual "just added, ready to
       // buy" expectation. Existing items keep whatever selection state the
       // user already set (see above), rather than being forced back on.
-      return [...prev, { ...item, quantity, selected: true }];
+      return [...prev, { ...item, quantity: added, selected: true }];
     });
+    return added;
   };
 
   const removeItem = (id: string) => {
@@ -232,7 +250,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) =>
       quantity <= 0
         ? prev.filter((i) => i.id !== id)
-        : prev.map((i) => (i.id === id ? { ...i, quantity } : i)),
+        : prev.map((i) =>
+            i.id === id ? { ...i, quantity: i.stock !== undefined && i.stock >= 1 ? Math.min(quantity, i.stock) : quantity } : i,
+          ),
     );
   };
 

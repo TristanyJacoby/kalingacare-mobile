@@ -113,12 +113,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
         presentToast({ message: "This item is out of stock.", duration: 2200, color: "warning" });
         return;
       }
-      addItem({
+      const added = addItem({
         id: product.id,
         name: product.name,
         price: product.price,
         img: product.imgBase64 || product.img,
+        stock: product.stock,
       });
+      if (added === 0) {
+        presentToast({
+          message: `You already have all ${product.stock} in stock in your cart.`,
+          duration: 2400,
+          color: "warning",
+        });
+        return;
+      }
       presentToast({ message: `${product.name} added to cart.`, duration: 1800, color: "success" });
     } finally {
       setAddLoading(false);

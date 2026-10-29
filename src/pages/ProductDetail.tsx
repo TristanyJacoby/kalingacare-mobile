@@ -256,8 +256,27 @@ const ProductDetail: React.FC = () => {
       return;
     }
 
+    if (typeof product.stock === 'number' && product.stock <= 0) {
+      presentToast({ message: 'This item is out of stock.', duration: 2200, color: 'warning' });
+      return;
+    }
+
     // Quantity is edited in Cart now, not here — always add 1 unit.
-    addItem({ id: product.id, name: product.name, price: product.price, img: product.imgBase64 || product.img });
+    const added = addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      img: product.imgBase64 || product.img,
+      stock: product.stock,
+    });
+    if (added === 0) {
+      presentToast({
+        message: `You already have all ${product.stock} in stock in your cart.`,
+        duration: 2400,
+        color: 'warning',
+      });
+      return;
+    }
     setShowAdded(true);
     setTimeout(() => setShowAdded(false), 1800);
   };

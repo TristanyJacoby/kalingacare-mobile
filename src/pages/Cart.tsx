@@ -56,6 +56,11 @@ const Cart: React.FC = () => {
       presentToast({ message: 'Select at least one item to check out.', duration: 2200, color: 'warning' });
       return;
     }
+    const soldOut = items.find((i) => i.selected && i.stock === 0);
+    if (soldOut) {
+      presentToast({ message: `${soldOut.name} is out of stock. Remove it to check out.`, duration: 2600, color: 'warning' });
+      return;
+    }
     navigate('/checkout');
   };
 
@@ -140,10 +145,16 @@ const Cart: React.FC = () => {
                     className="cart-qty-btn"
                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
                     aria-label="Increase quantity"
+                    disabled={item.stock !== undefined && item.quantity >= item.stock}
                   >
                     +
                   </button>
                 </div>
+                {item.stock === 0 ? (
+                  <p className="cart-stock-note cart-stock-out">Out of stock. Remove it to check out.</p>
+                ) : item.stock !== undefined && item.quantity >= item.stock ? (
+                  <p className="cart-stock-note">Only {item.stock} in stock</p>
+                ) : null}
               </div>
             </div>
           ))}

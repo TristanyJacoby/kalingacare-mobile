@@ -144,6 +144,21 @@
   justify-content: center;
 }
 
+.cart-qty-btn:disabled {
+  opacity: 0.4;
+}
+
+.cart-stock-note {
+  font-size: 11px;
+  color: #64748b;
+  margin: 4px 0 0;
+}
+
+.cart-stock-note.cart-stock-out {
+  color: #c0392b;
+  font-weight: 600;
+}
+
 .cart-qty-value {
   font-weight: 700;
   font-size: 12.5px;
