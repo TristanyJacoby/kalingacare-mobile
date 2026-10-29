@@ -17,11 +17,9 @@ import {
   where,
   getDocs,
   onSnapshot,
-  doc,
-  updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
-import { payOnline, PAYMENT_CHANNEL_LABELS } from "../utils/payments";
+import { payOnline, cancelOrder, PAYMENT_CHANNEL_LABELS } from "../utils/payments";
 import OrderTrackingStepper from "../components/OrderTrackingStepper";
 import TrackingMap from "../components/TrackingMap";
 import "./MyOrders.css";
@@ -207,7 +205,7 @@ const MyOrders: React.FC = () => {
   const handleCancel = async (orderId: string) => {
     setCancellingId(orderId);
     try {
-      await updateDoc(doc(db, "orders", orderId), { status: "Cancelled" });
+      await cancelOrder(orderId);
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, status: "Cancelled" } : o)),
       );
@@ -216,9 +214,9 @@ const MyOrders: React.FC = () => {
         duration: 2000,
         color: "success",
       });
-    } catch {
+    } catch (err) {
       presentToast({
-        message: "Could not cancel this order. Please try again.",
+        message: err instanceof Error ? err.message : "Could not cancel this order. Please try again.",
         duration: 2500,
         color: "danger",
       });

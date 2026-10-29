@@ -33,6 +33,20 @@ async function callPaymentApi(endpoint: string, orderId: string) {
   return data;
 }
 
+// Cancels one of the signed-in customer's orders through the server, which
+// also puts the stock back (customers can't edit orders directly any more).
+export async function cancelOrder(orderId: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Please log in again.');
+  const res = await fetch(`${API_BASE}/update-order`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await user.getIdToken()}` },
+    body: JSON.stringify({ orderId, action: 'cancel' }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Could not cancel this order. Please try again.');
+}
+
 export async function verifyPayment(orderId: string): Promise<PaymentStatus> {
   const { paymentStatus } = await callPaymentApi('verify-payment', orderId);
   return paymentStatus === 'paid' ? 'paid' : 'pending';
