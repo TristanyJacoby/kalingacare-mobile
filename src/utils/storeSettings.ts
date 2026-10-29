@@ -11,6 +11,7 @@ export interface StoreSettings {
   freeShippingOver: number; // 0 = shipping is never free
   codEnabled: boolean;
   onlineEnabled: boolean;
+  returnWindowDays: number; // days after delivery a return can be requested; 0 = returns off
 }
 
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
@@ -18,6 +19,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   freeShippingOver: 0,
   codEnabled: true,
   onlineEnabled: true,
+  returnWindowDays: 7,
 };
 
 let cached: Promise<StoreSettings> | null = null;
@@ -34,6 +36,10 @@ export function getStoreSettings(): Promise<StoreSettings> {
           freeShippingOver: Number.isFinite(free) && free > 0 ? free : 0,
           codEnabled: s.codEnabled !== false,
           onlineEnabled: s.onlineEnabled !== false,
+          returnWindowDays:
+            Number.isInteger(Number(s.returnWindowDays)) && Number(s.returnWindowDays) >= 0
+              ? Number(s.returnWindowDays)
+              : DEFAULT_STORE_SETTINGS.returnWindowDays,
         };
         if (!out.codEnabled && !out.onlineEnabled) out.codEnabled = true;
         return out;

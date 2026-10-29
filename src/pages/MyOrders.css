@@ -259,3 +259,34 @@
 .orders-pay-btn:disabled {
   opacity: 0.6;
 }
+
+.orders-return-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 11px;
+  background: #e2f2fb;
+  color: #1778ad;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.orders-return-btn:disabled {
+  opacity: 0.6;
+}
+
+.orders-return-note {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #e2f2fb;
+  color: #0b5e83;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.orders-return-note.refunded {
+  background: #dcefe3;
+  color: #1f6f46;
+}

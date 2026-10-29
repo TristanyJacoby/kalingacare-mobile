@@ -47,6 +47,21 @@ export async function cancelOrder(orderId: string): Promise<void> {
   if (!res.ok) throw new Error(data.error || 'Could not cancel this order. Please try again.');
 }
 
+// Asks the store for a return on a delivered order (api/manage-return.js).
+// The server checks the order is yours, delivered and inside the return
+// window; an empty item list means the whole order.
+export async function requestReturn(orderId: string, reason: string, note: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Please log in again.');
+  const res = await fetch(`${API_BASE}/manage-return`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await user.getIdToken()}` },
+    body: JSON.stringify({ action: 'request', orderId, reason, note }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Could not send the return request. Please try again.');
+}
+
 export async function verifyPayment(orderId: string): Promise<PaymentStatus> {
   const { paymentStatus } = await callPaymentApi('verify-payment', orderId);
   return paymentStatus === 'paid' ? 'paid' : 'pending';

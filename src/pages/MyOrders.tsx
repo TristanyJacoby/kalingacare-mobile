@@ -19,7 +19,8 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
-import { payOnline, cancelOrder, PAYMENT_CHANNEL_LABELS } from "../utils/payments";
+import { payOnline, cancelOrder, requestReturn, PAYMENT_CHANNEL_LABELS } from "../utils/payments";
+import { DEFAULT_STORE_SETTINGS, getStoreSettings } from "../utils/storeSettings";
 import OrderTrackingStepper from "../components/OrderTrackingStepper";
 import TrackingMap from "../components/TrackingMap";
 import "./MyOrders.css";
@@ -39,11 +40,30 @@ interface Order {
   discount: number;
   total: number;
   status: string;
-  createdAt?: { toDate: () => Date };
+  createdAt?: { toDate: () => Date; toMillis?: () => number };
+  statusUpdatedAt?: { toMillis: () => number };
   shippingInfo?: { lat?: number | null; lng?: number | null; paymentMethod?: string };
   paymentStatus?: string;
   payment?: { channel?: string | null };
+  // Set by the store's server when a return is asked for or decided.
+  returnStatus?: string;
+  refundedAmount?: number;
 }
+
+const RETURN_REASONS: { value: string; label: string }[] = [
+  { value: "damaged", label: "Arrived damaged" },
+  { value: "wrong_item", label: "Wrong item received" },
+  { value: "not_as_described", label: "Not as described" },
+  { value: "changed_mind", label: "Changed my mind" },
+  { value: "other", label: "Other" },
+];
+
+const RETURN_STATUS_LABEL: Record<string, string> = {
+  Requested: "Return requested. We'll email you.",
+  Approved: "Return approved. We'll refund you once the items reach us.",
+  Refunding: "Your refund is being issued.",
+  Rejected: "Return declined. Check your email for the reason.",
+};
 
 // Same color-badge pattern already used for role badges in Profile.tsx —
 // keeping the same visual language across the app.
@@ -77,6 +97,71 @@ const MyOrders: React.FC = () => {
   const navigate = useNavigate();
   const [presentToast] = useIonToast();
   const [presentAlert] = useIonAlert();
+  const [returnWindowDays, setReturnWindowDays] = useState(DEFAULT_STORE_SETTINGS.returnWindowDays);
+  const [returningId, setReturningId] = useState<string | null>(null);
+  useEffect(() => {
+    getStoreSettings().then((s) => setReturnWindowDays(s.returnWindowDays));
+  }, []);
+
+  const canRequestReturn = (order: Order) => {
+    if (order.status !== "Delivered" || order.returnStatus || returnWindowDays <= 0) return false;
+    const since = (order.statusUpdatedAt || order.createdAt)?.toMillis?.();
+    return !since || (Date.now() - since) / 86400000 <= returnWindowDays;
+  };
+
+  const sendReturn = async (orderId: string, reason: string, note: string) => {
+    setReturningId(orderId);
+    try {
+      await requestReturn(orderId, reason, note);
+      presentToast({ message: "Return requested. We'll email you.", duration: 2500, color: "success" });
+    } catch (err) {
+      presentToast({
+        message: err instanceof Error ? err.message : "Could not send the return request.",
+        duration: 3000,
+        color: "danger",
+      });
+    } finally {
+      setReturningId(null);
+    }
+  };
+
+  // Step 1: what's wrong (radio). "Other" asks for a few words in step 2.
+  const startReturn = (orderId: string) => {
+    presentAlert({
+      header: "Request a return",
+      subHeader: "The whole order. Shipping isn't refunded.",
+      inputs: RETURN_REASONS.map((r, i) => ({ type: "radio" as const, label: r.label, value: r.value, checked: i === 0 })),
+      buttons: [
+        { text: "Not now", role: "cancel" },
+        {
+          text: "Next",
+          handler: (reason: string) => {
+            if (reason === "other") {
+              presentAlert({
+                header: "Tell us more",
+                inputs: [{ type: "textarea", name: "note", placeholder: "What's the problem?", attributes: { maxlength: 500 } }],
+                buttons: [
+                  { text: "Back", role: "cancel" },
+                  {
+                    text: "Send request",
+                    handler: (data: { note?: string }) => {
+                      if (!data.note || data.note.trim().length < 5) {
+                        presentToast({ message: "Please describe the problem.", duration: 2000, color: "warning" });
+                        return false;
+                      }
+                      sendReturn(orderId, "other", data.note.trim());
+                    },
+                  },
+                ],
+              });
+            } else {
+              sendReturn(orderId, reason, "");
+            }
+          },
+        },
+      ],
+    });
+  };
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -359,6 +444,24 @@ const MyOrders: React.FC = () => {
                       disabled={payingId !== null}
                     >
                       {payingId === order.id ? "Waiting for payment…" : "Pay now"}
+                    </button>
+                  )}
+
+                  {order.returnStatus && (
+                    <p className={`orders-return-note${order.returnStatus === "Refunded" ? " refunded" : ""}`}>
+                      {order.returnStatus === "Refunded"
+                        ? `Refunded ${peso(order.refundedAmount || 0)}.`
+                        : RETURN_STATUS_LABEL[order.returnStatus] || order.returnStatus}
+                    </p>
+                  )}
+
+                  {canRequestReturn(order) && (
+                    <button
+                      className="orders-return-btn"
+                      onClick={() => startReturn(order.id)}
+                      disabled={returningId === order.id}
+                    >
+                      {returningId === order.id ? "Sending…" : "Request a Return"}
                     </button>
                   )}
 
